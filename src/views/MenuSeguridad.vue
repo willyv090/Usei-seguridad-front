@@ -58,11 +58,12 @@ export default {
     FooterComponent
   },
   methods: {
+    // Navega por NOMBRE de ruta para mayor robustez
     goToUsuariosRoles() {
-      this.$router.push('/seguridad/usuarios-roles');
+      this.$router.push({ name: 'GestionUsuariosRoles' }); // -> /gestion-usuarios-roles
     },
     goToContrasenas() {
-      this.$router.push('/seguridad/gestor-contrasenas');
+      this.$router.push({ name: 'GestorContrasenas' }); // -> /gestor-contrasenas (asegúrate de tener esta ruta)
     }
   }
 };

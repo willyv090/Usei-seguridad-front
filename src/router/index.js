@@ -31,6 +31,7 @@ import HistorialReportes from '@/views/HistorialReportes.vue'
 import CrearReporteDirector from '@/views/CrearReporteDirector.vue'
 import EstadoEstudiante from '@/views/EstadoEstudiante.vue'
 import MenuSeguridad from '@/views/MenuSeguridad.vue'
+import GestionUsuariosRoles from '@/views/GestionUsuariosRoles.vue'
 
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -229,6 +230,11 @@ const router = createRouter({
       path: '/menu-seguridad',
       name: 'MenuSeguridad',
       component: MenuSeguridad
+    },
+    {
+      path: '/gestion-usuarios-roles',
+      name: 'GestionUsuariosRoles',
+      component: GestionUsuariosRoles
     },
 
   ],
