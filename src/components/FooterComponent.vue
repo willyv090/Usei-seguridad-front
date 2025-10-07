@@ -22,7 +22,7 @@
   
       <!-- Barra inferior con copyright -->
       <div class="footer-bottom">
-        <p>UCB 2024 - Todos los Derechos Reservados.</p>
+        <p>UCB 2025 - Todos los Derechos Reservados.</p>
       </div>
     </footer>
   </template>
