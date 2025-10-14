@@ -1,11 +1,9 @@
 <template>
   <div>
-    <!-- Header -->
     <header>
       <NavBar :userRole="userRole" />
     </header>
 
-    <!-- Espaciador si tu NavBar es fijo -->
     <div class="header-spacer"></div>
 
     <main class="page-wrap">
@@ -18,7 +16,6 @@
             class="pill"
             :class="{ active: currentTab === 'usuarios' }"
             @click="switchTab('usuarios')"
-            title="Gestión de usuarios"
           >
             <i class="fas fa-users"></i>&nbsp;Usuarios
           </button>
@@ -26,14 +23,12 @@
             class="pill"
             :class="{ active: currentTab === 'roles' }"
             @click="switchTab('roles')"
-            title="Gestión de roles"
           >
             <i class="fas fa-user-shield"></i>&nbsp;Roles
           </button>
 
           <span class="divider"></span>
 
-          <!-- ÚNICO botón -->
           <button class="pill" @click="openNewPopup">
             <i class="fas fa-plus-circle"></i>&nbsp;Nuevo
           </button>
@@ -62,11 +57,11 @@
         <table>
           <thead>
             <tr>
-              <th @click="sort('usuario')">UserID/CI</th>
-              <th @click="sort('nombre')">Nombre</th>
-              <th @click="sort('correo')">Correo</th>
-              <th @click="sort('telefono')">Teléfono</th>
-              <th @click="sort('rol')">Rol</th>
+              <th>UserID/CI</th>
+              <th>Nombre</th>
+              <th>Correo</th>
+              <th>Teléfono</th>
+              <th>Rol</th>
               <th class="center">Acciones</th>
             </tr>
           </thead>
@@ -83,10 +78,10 @@
               <td>{{ u.telefono }}</td>
               <td><span class="badge">{{ u.rol }}</span></td>
               <td class="center">
-                <button class="action-btn" @click.stop="edit(idx)">
+                <button class="action-btn edit-btn" @click.stop="edit(idx)">
                   <i class="fas fa-pencil-alt"></i>
                 </button>
-                <button class="action-btn danger" @click.stop="remove(getId(u))">
+                <button class="action-btn delete-btn" @click.stop="remove(getId(u))">
                   <i class="fas fa-trash-alt"></i>
                 </button>
               </td>
@@ -100,9 +95,9 @@
         <table>
           <thead>
             <tr>
-              <th @click="sort('nombre')">Nombre</th>
-              <th @click="sort('descripcion')">Descripción</th>
-              <th @click="sort('activo')">Activo</th>
+              <th>Nombre del rol</th>
+              <th>Activo</th>
+              <th>Accesos</th>
               <th class="center">Acciones</th>
             </tr>
           </thead>
@@ -113,18 +108,20 @@
               :class="{ selected: selectedId === getId(r) }"
               @click="selectRow(r)"
             >
-              <td>{{ r.nombre }}</td>
-              <td>{{ r.descripcion }}</td>
+              <td>{{ r.nombreRol || r.nombre_rol }}</td>
               <td>
-                <span class="badge" :class="{ on: r.activo, off: !r.activo }">
+                <span :class="['badge', (r.activo || r.activo === true) ? 'on' : 'off']">
                   {{ r.activo ? 'Sí' : 'No' }}
                 </span>
               </td>
+              <td>
+                <span>{{ Array.isArray(r.accesos) ? r.accesos.join(', ') : r.accesos }}</span>
+              </td>
               <td class="center">
-                <button class="action-btn" @click.stop="edit(idx)">
+                <button class="action-btn edit-btn" @click.stop="edit(idx)">
                   <i class="fas fa-pencil-alt"></i>
                 </button>
-                <button class="action-btn danger" @click.stop="remove(getId(r))">
+                <button class="action-btn delete-btn" @click.stop="remove(getId(r))">
                   <i class="fas fa-trash-alt"></i>
                 </button>
               </td>
@@ -140,21 +137,20 @@
       />
     </main>
 
-    <!-- Footer -->
     <FooterComponent />
 
-    <!-- POPUP -->
     <AgregarUsuarioPopup
       v-if="showPopup"
-      :mode="currentTab"
+      :mode="currentTab === 'roles' ? 'roles' : 'usuarios'"
       :roles="allRoles"
-      @close="showPopup = false"
+      @close="closePopup"
       @guardar="handleGuardarNuevo"
     />
   </div>
 </template>
 
 <script>
+import axios from 'axios';
 import NavBar from '@/components/NavBar.vue';
 import FooterComponent from '@/components/FooterComponent.vue';
 import PaginationComponent from '@/components/PaginationComponent.vue';
@@ -179,6 +175,8 @@ export default {
       selectedId: null,
       totalPages: 1,
       showPopup: false,
+      ROLE_LIST_URL: `${BASE_URL}/usuario/rol`,
+      ROLE_MUTATION_BASE: `${BASE_URL}/usuario/rol`,
     };
   },
   mounted() {
@@ -189,73 +187,102 @@ export default {
     switchTab(tab) {
       this.currentTab = tab;
       this.resetTableParams();
+      this.sortBy = tab === 'roles' ? 'nombreRol' : 'nombre';
       this.fetchData();
     },
     resetTableParams() {
       this.searchTerm = '';
       this.currentPage = 1;
-      this.sortBy = 'nombre';
       this.sortDirection = 'asc';
       this.selectedId = null;
     },
-    selectRow(row) { this.selectedId = this.getId(row); },
-    getId(row) { return row.idUsuario || row.id || row.idRol || row.id_rol || row.id_usuario; },
+    selectRow(row) {
+      this.selectedId = this.getId(row);
+    },
+    getId(row) {
+      return row.idRol || row.id_rol || row.idUsuario || row.id || row.id_usuario;
+    },
 
     async fetchData(page = 1) {
       try {
-        const url = this.currentTab === 'usuarios' ? `${BASE_URL}/usuario` : `${BASE_URL}/rol`;
-        const { data } = await this.$protectedAxios.get(url, {
-          params: {
-            page: page - 1,
-            size: this.perPage,
-            filter: this.searchTerm,
-            sortBy: this.sortBy,
-            sortDirection: this.sortDirection,
-          },
-        });
-        this.rows = Array.isArray(data.content) ? data.content : data;
-        this.totalPages = data.totalPages || 1;
+        const url = this.currentTab === 'usuarios'
+          ? `${BASE_URL}/usuario`
+          : this.ROLE_LIST_URL;
+
+        const { data } = await axios.get(url);
+        console.log('📦 Datos recibidos:', data);
+
+        if (Array.isArray(data)) this.rows = data;
+        else if (Array.isArray(data?.content)) this.rows = data.content;
+        else if (Array.isArray(data?.roles)) this.rows = data.roles;
+        else this.rows = [];
+
+        this.rows = this.rows.map(r => ({
+          idRol: r.idRol || r.id_rol,
+          nombreRol: r.nombreRol || r.nombre_rol,
+          activo: r.activo,
+          accesos: typeof r.accesos === 'string' ? r.accesos.split(',') : r.accesos,
+        }));
+
+        this.totalPages = data?.totalPages || 1;
         this.currentPage = page;
-      } catch {
+      } catch (error) {
+        console.error('❌ Error al cargar datos:', error);
         Swal.fire('Error', 'No se pudo cargar la información.', 'error');
       }
     },
+
     async fetchAllRoles() {
       try {
-        const { data } = await this.$protectedAxios.get(`${BASE_URL}/rol`, { params: { size: 1000 } });
-        this.allRoles = Array.isArray(data.content) ? data.content : data;
-      } catch {
+        const { data } = await axios.get(this.ROLE_LIST_URL);
+        if (Array.isArray(data)) this.allRoles = data;
+        else if (Array.isArray(data?.content)) this.allRoles = data.content;
+        else if (Array.isArray(data?.roles)) this.allRoles = data.roles;
+        else this.allRoles = [];
+      } catch (error) {
+        console.error('❌ Error al cargar roles:', error);
         this.allRoles = [];
       }
     },
-    sort(field) {
-      if (this.sortBy === field) this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-      else { this.sortBy = field; this.sortDirection = 'asc'; }
-      this.fetchData(this.currentPage);
+
+    openNewPopup() {
+      this.showPopup = false;
+      this.$nextTick(() => {
+        this.showPopup = true;
+      });
     },
-    toggleSortDirection() {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-      this.fetchData(this.currentPage);
+
+    closePopup() {
+      this.showPopup = false;
     },
-    handlePageClick(p) {
-      this.currentPage = p;
-      this.fetchData(p);
-    },
-    openNewPopup() { this.showPopup = true; },
+
     async handleGuardarNuevo(payload) {
       try {
-        const url = this.currentTab === 'usuarios' ? `${BASE_URL}/usuario` : `${BASE_URL}/rol`;
-        await this.$protectedAxios.post(url, payload);
+        if (this.currentTab === 'usuarios') {
+          await axios.post(`${BASE_URL}/usuario`, payload);
+        } else {
+          const body = {
+            nombreRol: payload.nombreRol?.trim(),
+            activo: payload.activo === 'true' || payload.activo === true,
+            accesos: payload.accesos || [],
+          };
+          if (!body.nombreRol) {
+            Swal.fire('Validación', 'El nombre del rol es obligatorio.', 'warning');
+            return;
+          }
+          await axios.post(this.ROLE_MUTATION_BASE, body);
+        }
+
         this.showPopup = false;
-        this.fetchData(this.currentPage);
+        await Promise.all([this.fetchData(this.currentPage), this.fetchAllRoles()]);
         Swal.fire('Éxito', 'Registro creado correctamente.', 'success');
-      } catch {
-        Swal.fire('Error', 'No se pudo crear el registro.', 'error');
+      } catch (e) {
+        console.error('❌ Error al guardar:', e);
+        const msg = e?.response?.data ?? 'No se pudo crear el registro.';
+        Swal.fire('Error', String(msg), 'error');
       }
     },
-    edit() {
-      Swal.fire('Info', 'Implementa aquí tu edición si lo necesitas.', 'info');
-    },
+
     async remove(id) {
       const ok = await Swal.fire({
         title: '¿Eliminar registro?',
@@ -268,15 +295,18 @@ export default {
         cancelButtonText: 'Cancelar',
       });
       if (!ok.isConfirmed) return;
+
       try {
         const url = this.currentTab === 'usuarios'
           ? `${BASE_URL}/usuario/${id}`
-          : `${BASE_URL}/rol/${id}`;
-        await this.$protectedAxios.delete(url);
-        this.fetchData(this.currentPage);
+          : `${this.ROLE_MUTATION_BASE}/${id}`;
+        await axios.delete(url);
+        await Promise.all([this.fetchData(this.currentPage), this.fetchAllRoles()]);
         Swal.fire('Eliminado', 'Se eliminó correctamente.', 'success');
-      } catch {
-        Swal.fire('Error', 'No se pudo eliminar.', 'error');
+      } catch (e) {
+        console.error('❌ Error al eliminar:', e);
+        const msg = e?.response?.data ?? 'No se pudo eliminar.';
+        Swal.fire('Error', String(msg), 'error');
       }
     },
   },
@@ -284,119 +314,53 @@ export default {
 </script>
 
 <style scoped>
-/* Espaciador por si el NavBar es fijo (ajusta alto si necesitas) */
 .header-spacer { height: 72px; }
-
-/* Layout */
-.page-wrap {
-  padding-top: 12px;            /* menos “pegado” al navbar */
-  min-height: 100vh;
-  background-color: #fff;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  align-items: center;
-  padding-left: 2%;
-  padding-right: 2%;
-}
+.page-wrap { padding-top: 12px; min-height: 100vh; background-color: #fff; display: flex; flex-direction: column; gap: 16px; align-items: center; padding-left: 2%; padding-right: 2%; }
 .title { font-size: 32px; font-weight: 700; margin-top: 6px; color: #000; }
-
-/* Título de la barra */
-.toolbar-title {
-  width: 100%;
-  max-width: 1200px;
-  margin: 6px 0 4px;
-  color: #263D42;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-/* Toolbar */
-.toolbar {
-  width: 100%;
-  max-width: 1200px;
-  background: #83cabb;
-  border: 1px solid #9fc1c7;
-  border-radius: 14px;
-  padding: 12px;
-  display: flex;
-  justify-content: flex-start;
-  gap: 10px;
-  margin-bottom: 8px;          /* separa de los filtros */
-}
+.toolbar { width: 100%; max-width: 1200px; background: #83cabb; border: 1px solid #9fc1c7; border-radius: 14px; padding: 12px; display: flex; justify-content: flex-start; gap: 10px; margin-bottom: 8px; }
 .toolbar-left { display: flex; gap: 8px; align-items: center; }
-
-.pill {
-  background: #8E6C88;
-  color: #e6e0e0;
-  border: 1px solid #49505a;
-  border-radius: 999px;
-  padding: 8px 14px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: background .2s ease, transform .05s ease;
-}
+.pill { background: #8E6C88; color: #e6e0e0; border: 1px solid #49505a; border-radius: 999px; padding: 8px 14px; font-size: 14px; cursor: pointer; transition: background .2s ease; }
 .pill:hover { background: #3c444e; }
 .pill.active { background: #263d42; color: #fff; border-color: #3d555b; }
-
 .divider { width: 1px; height: 24px; background: #494f58; margin: 0 6px; border-radius: 1px; }
-
-/* Filtros */
-.filters {
-  width: 100%;
-  max-width: 1200px;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-}
+.filters { width: 100%; max-width: 1200px; display: flex; gap: 12px; align-items: center; }
 .filters input { flex: 1; padding: 10px 12px; border: 1px solid #ccc; border-radius: 10px; }
 .filters select { padding: 10px; border: 1px solid #ccc; border-radius: 10px; }
-.sort-button {
-  background-color: #263D42;
-  color: white;
-  border: none;
-  padding: 10px 14px;
-  border-radius: 10px;
-  cursor: pointer;
-}
-
-/* Tabla */
-.table-wrap {
-  width: 100%;
-  max-width: 1200px;
-  background: #CBDADB;
-  padding: 1.6rem;
-  border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0,0,0,.1);
-  overflow-x: auto;
-}
+.sort-button { background-color: #263D42; color: white; border: none; padding: 10px 14px; border-radius: 10px; cursor: pointer; }
+.table-wrap { width: 100%; max-width: 1200px; background: #CBDADB; padding: 1.6rem; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,.1); overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
-th, td { border: 1px solid #263D42; padding: 10px; text-align: left; background: #fff; }
-th { background: #263D42; color: #fff; user-select: none; cursor: pointer; }
-tr.selected td { outline: 2px solid #80CED7; outline-offset: -2px; }
+th, td { border: 1px solid #263D42; padding: 10px; background: #fff; }
+th { background: #263D42; color: #fff; }
 .center { text-align: center; }
-
-/* Acciones */
-.action-btn {
-  background: #263D42;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 10px;
-  cursor: pointer;
-  margin-right: 8px;
-}
-.action-btn.danger { background: #8E6C88; }
-
-.badge {
-  display: inline-block;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #e7eef0;
-  color: #263D42;
-  font-weight: 600;
-  font-size: 12px;
-}
+.badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #e7eef0; color: #263D42; font-weight: 600; font-size: 12px; }
 .badge.on { background: #63C7B2; color: #fff; }
 .badge.off { background: #8E6C88; color: #fff; }
+
+/* --- NUEVO ESTILO DE BOTONES DE ACCIÓN --- */
+.action-btn {
+  padding: 10px;
+  margin: 0 5px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.edit-btn {
+  background-color: #80CED7;
+}
+
+.delete-btn {
+  background-color: #8E6C88;
+}
+
+.action-btn i {
+  font-size: 20px;
+}
+
+.action-btn:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
 </style>

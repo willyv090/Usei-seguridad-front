@@ -1,22 +1,24 @@
 <template>
   <div class="popup-overlay" @click.self="$emit('close')">
-    <div class="popup-content">
-      <!-- Cerrar -->
+    <div class="popup-content" :class="{ 'wide-mode': step === 2 }">
+      <!-- Botón cerrar -->
       <button class="close-btn" @click="$emit('close')">×</button>
 
       <h2 v-if="mode==='usuarios'">Registrar Usuario</h2>
       <h2 v-else>Registrar Rol</h2>
 
-      <!-- Pasos -->
-      <div class="steps-indicator">
-        <span :class="{ active: step === 1 }">1</span>
-        <span :class="{ active: step === 2 }">2</span>
-        <span :class="{ active: step === 3 }">3</span>
+      <!-- Stepper -->
+      <div class="stepper">
+        <div v-for="n in 3" :key="n" class="stepper-step" :class="{ active: step >= n }">
+          <div class="circle">{{ n }}</div>
+          <div v-if="n < 3" class="line"></div>
+        </div>
       </div>
 
-      <!-- STEP 1 -->
-      <div v-if="step === 1" class="step">
-        <div class="step-body">
+      <!-- Contenedor con scroll interno -->
+      <div class="popup-body">
+        <!-- STEP 1 -->
+        <div v-if="step === 1" class="step">
           <form @submit.prevent>
             <template v-if="mode==='usuarios'">
               <div class="form-group">
@@ -45,25 +47,21 @@
             <template v-else>
               <div class="form-group">
                 <label for="nombreRol">Nombre del rol</label>
-                <input id="nombreRol" v-model="form.nombre" type="text" required />
+                <input id="nombreRol" v-model="form.nombreRol" type="text" required />
               </div>
               <div class="form-group">
-                <label for="descripcion">Descripción</label>
-                <input id="descripcion" v-model="form.descripcion" type="text" />
+                <label for="activo">Activo</label>
+                <select id="activo" v-model="form.activo">
+                  <option :value="true">Sí</option>
+                  <option :value="false">No</option>
+                </select>
               </div>
             </template>
           </form>
         </div>
 
-        <!-- acciones fijas -->
-        <div class="actions actions-single">
-          <button class="submit-btn" @click="goToStep(2)">Siguiente</button>
-        </div>
-      </div>
-
-      <!-- STEP 2 -->
-      <div v-else-if="step === 2" class="step">
-        <div class="step-body">
+        <!-- STEP 2 -->
+        <div v-else-if="step === 2" class="step step-scrollable">
           <form @submit.prevent>
             <template v-if="mode==='usuarios'">
               <div class="form-group">
@@ -85,39 +83,47 @@
 
             <template v-else>
               <div class="form-group">
-                <label for="activo">Activo</label>
-                <select id="activo" v-model="form.activo">
-                  <option :value="true">Sí</option>
-                  <option :value="false">No</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="matriz">Matriz de accesos (JSON/Notas)</label>
-                <textarea id="matriz" v-model="form.matrizAcceso" rows="3" placeholder='{"modulo":"certificados","permisos":["ver","crear"]}'></textarea>
+                <label class="titulo-accesos">Accesos (módulos disponibles)</label>
+                <div v-for="(mods, grupo) in modulos" :key="grupo" class="modulo-group">
+                  <h4>{{ capitalize(grupo) }}</h4>
+                  <div class="modulo-grid">
+                    <div
+                      v-for="mod in mods"
+                      :key="grupo + '-' + mod"
+                      class="modulo-item"
+                      :class="{ selected: form.accesos.includes(grupo + ':' + mod) }"
+                      @click="toggleAcceso(grupo, mod)"
+                      @dblclick="removeAcceso(grupo, mod)"
+                    >
+                      <i v-if="form.accesos.includes(grupo + ':' + mod)" class="fas fa-check-square"></i>
+                      <i v-else class="far fa-square"></i>
+                      <span>{{ mod }}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </template>
           </form>
         </div>
 
-        <div class="actions">
-          <button class="alt-btn" @click="goToStep(1)">Atrás</button>
-          <button class="submit-btn" @click="goToStep(3)">Siguiente</button>
+        <!-- STEP 3 -->
+        <div v-else-if="step === 3" class="step">
+          <div class="form-group">
+            <label>Resumen</label>
+            <textarea :value="mode==='usuarios' ? resumenUsuario : resumenRol" rows="6" disabled></textarea>
+          </div>
         </div>
       </div>
 
-      <!-- STEP 3 -->
-      <div v-else-if="step === 3" class="step">
-        <div class="step-body">
-          <div class="form-group">
-            <label>Resumen</label>
-            <textarea :value="mode==='usuarios' ? resumenUsuario : resumenRol" rows="5" disabled></textarea>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button class="alt-btn" @click="goToStep(2)">Atrás</button>
-          <button class="submit-btn" @click="submitForm">Registrar</button>
-        </div>
+      <!-- Botones SIEMPRE visibles -->
+      <div class="actions">
+        <button v-if="step > 1" class="alt-btn" @click="goToStep(step - 1)">Atrás</button>
+        <button
+          class="submit-btn"
+          @click="step === 3 ? submitForm() : goToStep(step + 1)"
+        >
+          {{ step === 3 ? 'Registrar' : 'Siguiente' }}
+        </button>
       </div>
     </div>
   </div>
@@ -134,17 +140,20 @@ const swal = Swal.mixin({
 export default {
   name: 'NuevoItemPopup',
   emits: ['close', 'guardar'],
-  props: {
-    mode: { type: String, required: true }, // 'usuarios' | 'roles'
-    roles: { type: Array, default: () => [] }
-  },
+  props: { mode: String, roles: Array },
   data() {
     return {
       step: 1,
       showPassword: false,
       form: this.mode === 'usuarios'
         ? { usuario: '', nombre: '', correo: '', contrasenia: '', telefono: '', rol: '', correoAlterno: '' }
-        : { nombre: '', descripcion: '', activo: true, matrizAcceso: '' }
+        : { nombreRol: '', activo: true, accesos: [] },
+      modulos: {
+        estudiante: ['Encuesta de Graduación', 'Certificados', 'Soporte/Ayuda', 'Estado del Proceso'],
+        administrador: ['Estudiantes', 'Encuesta de Graduación', 'Certificados', 'Editar Encuesta', 'Editar Certificado', 'Reportes', 'Datos', 'Noticias/Anuncios', 'Soporte/Ayuda', 'Estudiantes Registrados', 'Plazos'],
+        director: ['Reportes', 'Seguimiento de estudiantes', 'Soporte/Ayuda'],
+        seguridad: ['Gestión de usuarios y roles', 'Gestión de contraseñas'],
+      }
     }
   },
   computed: {
@@ -158,45 +167,37 @@ Rol: ${f.rol}`
     },
     resumenRol() {
       const f = this.form
-      return `Rol: ${f.nombre}
-Descripción: ${f.descripcion}
+      return `Rol: ${f.nombreRol}
 Activo: ${f.activo ? 'Sí' : 'No'}
-Matriz: ${f.matrizAcceso || '(vacía)'}`
+Accesos: ${f.accesos.length ? f.accesos.map(a => a.split(':')[1]).join(', ') : '(sin accesos)'}` 
     }
   },
   methods: {
+    capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1) },
+    toggleAcceso(grupo, mod) {
+      const key = `${grupo}:${mod}`
+      if (!this.form.accesos.includes(key)) this.form.accesos.push(key)
+    },
+    removeAcceso(grupo, mod) {
+      const key = `${grupo}:${mod}`
+      this.form.accesos = this.form.accesos.filter(m => m !== key)
+    },
     goToStep(num) {
       if (num === 2 && this.step === 1) {
-        if (this.mode === 'usuarios') {
-          if (!this.form.usuario || !this.form.nombre || !this.form.correo) {
-            swal.fire({ icon: 'warning', title: 'Completa los campos del paso 1.' })
-            return
-          }
-        } else if (!this.form.nombre) {
-          swal.fire({ icon: 'warning', title: 'Completa el nombre del rol.' })
-          return
-        }
-      }
-      if (num === 3 && this.step === 2) {
-        if (this.mode === 'usuarios' && !this.form.rol) {
-          swal.fire({ icon: 'warning', title: 'Selecciona un rol.' })
-          return
-        }
+        if (this.mode === 'usuarios' && (!this.form.usuario || !this.form.nombre || !this.form.correo))
+          return swal.fire({ icon: 'warning', title: 'Completa los campos del paso 1.' })
+        else if (!this.form.nombreRol)
+          return swal.fire({ icon: 'warning', title: 'El nombre del rol es obligatorio.' })
       }
       this.step = num
     },
     submitForm() {
       if (this.mode === 'usuarios') {
         const required = ['usuario', 'nombre', 'correo', 'rol']
-        const missing = required.filter(k => !String(this.form[k] || '').trim())
-        if (missing.length) {
-          swal.fire({ icon: 'warning', title: 'Campos requeridos', text: 'Completa todos los obligatorios.' })
-          return
-        }
-      } else if (!this.form.nombre) {
-        swal.fire({ icon: 'warning', title: 'Campos requeridos', text: 'El nombre del rol es obligatorio.' })
-        return
-      }
+        if (required.some(k => !String(this.form[k] || '').trim()))
+          return swal.fire({ icon: 'warning', title: 'Completa todos los obligatorios.' })
+      } else if (!this.form.nombreRol)
+        return swal.fire({ icon: 'warning', title: 'El nombre del rol es obligatorio.' })
       this.$emit('guardar', { ...this.form })
     }
   }
@@ -204,7 +205,6 @@ Matriz: ${f.matrizAcceso || '(vacía)'}`
 </script>
 
 <style scoped>
-/* Overlay */
 .popup-overlay {
   position: fixed; inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
@@ -212,98 +212,113 @@ Matriz: ${f.matrizAcceso || '(vacía)'}`
   z-index: 1000;
 }
 
-/* Tarjeta */
+/* Popup principal */
 .popup-content {
   background-color: white;
   border: 5px solid #63C7B2;
-  padding: 18px 18px 10px;
   border-radius: 15px;
+  padding: 18px;
   position: relative;
-  width: 420px;                /* un pelín más ancho para evitar cortes */
-  max-height: 90vh;            /* más alto, con layout en columnas */
+  width: 520px;
+  max-height: 92vh;
   display: flex;
   flex-direction: column;
+  transition: width 0.3s ease;
+  overflow: hidden;
+}
+.popup-content.wide-mode { width: 950px; }
+
+/* Stepper */
+.stepper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0 20px;
+}
+.stepper-step { display: flex; align-items: center; position: relative; }
+.circle {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: #CCDBDC; color: #263D42;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+  transition: all 0.3s ease;
+}
+.stepper-step.active .circle { background: #63C7B2; color: white; }
+.line {
+  width: 80px; height: 4px; background: #CCDBDC; margin: 0 8px; border-radius: 2px;
+}
+.stepper-step.active + .stepper-step .line { background: #63C7B2; }
+
+/* Cuerpo con scroll */
+.popup-body {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-bottom: 10px;
 }
 
-.popup-content h2 {
-  text-align: center;
-  margin-bottom: 8px;
-  color: #263D42;
+/* Botones fijos */
+.actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+  background: white;
+  border-top: 1px solid #CCDBDC;
+  position: sticky;
+  bottom: 0;
 }
+.actions button {
+  flex: 1;
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+}
+.submit-btn { background-color: #63C7B2; color: white; }
+.submit-btn:hover { background-color: #8E6C88; }
+.alt-btn { background-color: #CCDBDC; color: #333; }
+.alt-btn:hover { background-color: #263D42; color: white; }
+
+/* Formularios */
+.form-group { margin-bottom: 10px; }
+.form-group label { display: block; margin-bottom: 5px; color: #263D42; font-weight: 600; }
+input, select, textarea {
+  width: 100%; padding: 8px;
+  border: 1.5px solid #929292; border-radius: 10px;
+}
+
+/* Accesos */
+.titulo-accesos { font-weight: 700; color: #263D42; margin-bottom: 10px; }
+.modulo-group { margin-bottom: 10px; }
+.modulo-group h4 { margin-bottom: 6px; color: #263D42; font-weight: 700; }
+.modulo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+}
+.modulo-item {
+  border: 1.5px solid #63C7B2;
+  border-radius: 10px;
+  padding: 6px 8px;
+  background: #F8F9F9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.modulo-item i { font-size: 14px; }
+.modulo-item.selected {
+  background-color: #63C7B2;
+  color: white;
+  border-color: #63C7B2;
+}
+.modulo-item:hover { background-color: #CCDBDC; }
 
 .close-btn {
   position: absolute; top: 10px; right: 12px;
   background: none; border: none; font-size: 20px; cursor: pointer; color: #263D42;
-}
-
-/* Pasos */
-.steps-indicator {
-  display: flex; justify-content: center; gap: 10px; margin: 6px 0 10px;
-}
-.steps-indicator span {
-  width: 28px; height: 28px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  border: 2px solid #63C7B2; color: #263D42; font-weight: 700;
-  background: #CCDBDC;
-}
-.steps-indicator span.active { background: #63C7B2; color: #fff; border-color: #63C7B2; }
-
-/* Step layout */
-.step { display: flex; flex-direction: column; min-height: 0; }
-.step-body {
-  overflow-y: auto;
-  padding-right: 4px;
-  max-height: 100%;
-}
-
-/* Acciones pegadas abajo, fuera del scroll */
-.actions {
-  position: sticky;
-  bottom: 0;
-  background: #ffffff;
-  padding-top: 8px;
-  margin-top: 10px;
-  display: flex; gap: 10px; justify-content: space-between;
-  border-top: 1px solid #CCDBDC;
-}
-.actions-single { justify-content: center; }
-
-/* Inputs */
-.form-group { margin-bottom: 12px; }
-.form-group label { display: block; margin-bottom: 5px; color: #263D42; font-weight: 600; }
-.form-group input,
-.form-group select,
-.form-group textarea {
-  width: 100%; padding: 10px;
-  border: 1.5px solid #929292;
-  border-radius: 15px;
-  background: #fff;
-}
-
-/* Password toggle */
-.password-wrapper { position: relative; display: flex; align-items: center; }
-.password-wrapper input { width: 100%; padding-right: 34px; }
-.toggle-password { position: absolute; right: 10px; cursor: pointer; color: #263D42; }
-
-/* Botones (misma paleta que tu login) */
-.submit-btn {
-  flex: 1;
-  padding: 10px; font-size: 16px;
-  background-color: #63C7B2; color: white;
-  border: none; border-radius: 15px; cursor: pointer;
-}
-.submit-btn:hover { background-color: #8E6C88; color: white; }
-
-.alt-btn {
-  flex: 1;
-  padding: 10px; font-size: 16px;
-  background-color: #CCDBDC; color: #333;
-  border: none; border-radius: 15px; cursor: pointer;
-}
-.alt-btn:hover { background-color: #263D42; color: white; }
-
-/* Responsive */
-@media (max-width: 440px) {
-  .popup-content { width: 92vw; }
 }
 </style>
