@@ -78,9 +78,6 @@
               <td>{{ u.telefono }}</td>
               <td><span class="badge">{{ u.rol }}</span></td>
               <td class="center">
-                <button class="action-btn edit-btn" @click.stop="edit(idx)">
-                  <i class="fas fa-pencil-alt"></i>
-                </button>
                 <button class="action-btn delete-btn" @click.stop="remove(getId(u))">
                   <i class="fas fa-trash-alt"></i>
                 </button>
@@ -109,18 +106,21 @@
               @click="selectRow(r)"
             >
               <td>{{ r.nombreRol || r.nombre_rol }}</td>
-              <td>
-                <span :class="['badge', (r.activo || r.activo === true) ? 'on' : 'off']">
-                  {{ r.activo ? 'Sí' : 'No' }}
-                </span>
+              <td class="center">
+                <!-- Toggle Switch -->
+                <label class="switch">
+                  <input
+                    type="checkbox"
+                    :checked="r.activo"
+                    @change.stop="toggleActivo(r)"
+                  />
+                  <span class="slider"></span>
+                </label>
               </td>
               <td>
                 <span>{{ Array.isArray(r.accesos) ? r.accesos.join(', ') : r.accesos }}</span>
               </td>
               <td class="center">
-                <button class="action-btn edit-btn" @click.stop="edit(idx)">
-                  <i class="fas fa-pencil-alt"></i>
-                </button>
                 <button class="action-btn delete-btn" @click.stop="remove(getId(r))">
                   <i class="fas fa-trash-alt"></i>
                 </button>
@@ -210,8 +210,6 @@ export default {
           : this.ROLE_LIST_URL;
 
         const { data } = await axios.get(url);
-        console.log('📦 Datos recibidos:', data);
-
         if (Array.isArray(data)) this.rows = data;
         else if (Array.isArray(data?.content)) this.rows = data.content;
         else if (Array.isArray(data?.roles)) this.rows = data.roles;
@@ -242,6 +240,26 @@ export default {
       } catch (error) {
         console.error('❌ Error al cargar roles:', error);
         this.allRoles = [];
+      }
+    },
+
+    async toggleActivo(rol) {
+      const nuevoEstado = !rol.activo;
+      const estadoAnterior = rol.activo;
+      rol.activo = nuevoEstado;
+
+      try {
+        await axios.put(`${this.ROLE_MUTATION_BASE}/${rol.idRol}/estado`, { activo: nuevoEstado });
+        Swal.fire({
+          icon: 'success',
+          title: `Rol ${nuevoEstado ? 'activado' : 'desactivado'} correctamente`,
+          timer: 1300,
+          showConfirmButton: false
+        });
+      } catch (e) {
+        console.error('❌ Error al cambiar estado:', e);
+        rol.activo = estadoAnterior;
+        Swal.fire('Error', 'No se pudo cambiar el estado del rol.', 'error');
       }
     },
 
@@ -309,6 +327,10 @@ export default {
         Swal.fire('Error', String(msg), 'error');
       }
     },
+
+    handlePageClick(page) {
+      this.fetchData(page);
+    },
   },
 };
 </script>
@@ -332,11 +354,43 @@ table { width: 100%; border-collapse: collapse; }
 th, td { border: 1px solid #263D42; padding: 10px; background: #fff; }
 th { background: #263D42; color: #fff; }
 .center { text-align: center; }
-.badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #e7eef0; color: #263D42; font-weight: 600; font-size: 12px; }
-.badge.on { background: #63C7B2; color: #fff; }
-.badge.off { background: #8E6C88; color: #fff; }
 
-/* --- NUEVO ESTILO DE BOTONES DE ACCIÓN --- */
+/* --- SWITCH TOGGLE --- */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #b0b0b0; /* gris apagado */
+  transition: 0.3s;
+  border-radius: 24px;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.25);
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+input:checked + .slider {
+  background-color: #63C7B2;
+}
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* --- BOTONES --- */
 .action-btn {
   padding: 10px;
   margin: 0 5px;
@@ -346,21 +400,7 @@ th { background: #263D42; color: #fff; }
   color: white;
   transition: all 0.3s ease;
 }
-
-.edit-btn {
-  background-color: #80CED7;
-}
-
-.delete-btn {
-  background-color: #8E6C88;
-}
-
-.action-btn i {
-  font-size: 20px;
-}
-
-.action-btn:hover {
-  transform: scale(1.05);
-  opacity: 0.9;
-}
+.delete-btn { background-color: #8E6C88; }
+.action-btn i { font-size: 20px; }
+.action-btn:hover { transform: scale(1.05); opacity: 0.9; }
 </style>
