@@ -488,50 +488,53 @@ export default {
   },
 
   async guardarCambios() {
-      try {
-        // Detectar cambios reales comparando backup y actual
-        const cambios = this.rows.filter((u, i) => {
-          const original = this.backupRows[i];
-          return JSON.stringify(u) !== JSON.stringify(original);
-        });
+    try {
+      // Detectar cambios reales comparando backup y actual
+      const cambios = this.rows.filter((u, i) => {
+        const original = this.backupRows[i];
+        return JSON.stringify(u) !== JSON.stringify(original);
+      });
 
-        if (!cambios.length) {
-          Swal.fire('Sin cambios', 'No hay modificaciones para guardar.', 'info');
-          this.editMode = false;
-          return;
-        }
-
-        for (const usuario of cambios) {
-          const rolSel = this.allRoles.find(r => r.nombreRol === usuario.rol);
-          const body = {
-            ci: usuario.ci,
-            nombre: usuario.nombre,
-            apellido: usuario.apellido,
-            correo: usuario.correo,
-            telefono: usuario.telefono,
-            carrera: usuario.carrera,
-            idRol: rolSel ? rolSel.idRol : null
-          };
-
-          await axios.put(`${BASE_URL}/usuario/${usuario.idUsuario}`, body, {
-            headers: { 'Content-Type': 'application/json' }
-          });
-        }
-
-        Swal.fire({
-          icon: 'success',
-          title: 'Cambios guardados correctamente',
-          timer: 1500,
-          showConfirmButton: false,
-        });
-
+      if (!cambios.length) {
+        Swal.fire('Sin cambios', 'No hay modificaciones para guardar.', 'info');
         this.editMode = false;
-        await this.fetchData(this.currentPage);
-      } catch (err) {
-        console.error('❌ Error al guardar cambios:', err);
-        Swal.fire('Error', 'No se pudieron guardar los cambios.', 'error');
+        return;
       }
-    },
+
+      for (const usuario of cambios) {
+        const rolSel = this.allRoles.find(r => r.nombreRol === usuario.rol);
+        const body = {};
+
+        // Agregamos solo campos que realmente existen (parcheo parcial)
+        if (usuario.ci) body.ci = usuario.ci;
+        if (usuario.nombre) body.nombre = usuario.nombre;
+        if (usuario.apellido) body.apellido = usuario.apellido;
+        if (usuario.correo) body.correo = usuario.correo;
+        if (usuario.telefono) body.telefono = usuario.telefono;
+        if (usuario.carrera) body.carrera = usuario.carrera;
+        if (rolSel) body.idRol = rolSel.idRol;
+
+        // 👇 PATCH en lugar de PUT
+        await axios.patch(`${BASE_URL}/usuario/${usuario.idUsuario}`, body, {
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Cambios guardados correctamente',
+        timer: 1500,
+        showConfirmButton: false,
+      });
+
+      this.editMode = false;
+      await this.fetchData(this.currentPage);
+    } catch (err) {
+      console.error('❌ Error al guardar cambios:', err);
+      Swal.fire('Error', 'No se pudieron guardar los cambios.', 'error');
+    }
+  },
+
 
     handlePageClick(page) {
       this.fetchData(page);
