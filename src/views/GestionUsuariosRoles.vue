@@ -7,6 +7,17 @@
     <div class="header-spacer"></div>
 
     <main class="page-wrap">
+      <!-- Animación de carga -->
+      <div v-if="loading" class="loading-overlay">
+        <div class="container">
+          <div class="ball"></div>
+          <div class="ball"></div>
+          <div class="ball"></div>
+          <div class="ball"></div>
+          <div class="ball"></div>
+        </div>
+      </div>
+
       <h1 class="title">Gestión de Usuarios y Roles</h1>
 
       <!-- Toolbar -->
@@ -144,20 +155,35 @@
 
               <!-- Acciones -->
               <td class="center">
+                <!-- Botón de editar -->
                 <button
                   v-if="!editMode"
                   class="action-btn edit-btn"
                   @click.stop="activarEdicion"
+                  title="Modificar usuario"
                 >
                   <i class="fas fa-pen"></i>
                 </button>
+
+                <!-- Botón de eliminar -->
                 <button
                   class="action-btn delete-btn"
                   @click.stop="remove(getId(u))"
+                  title="Eliminar usuario"
                 >
                   <i class="fas fa-trash-alt"></i>
                 </button>
+
+                <!-- Botón de enviar credenciales -->
+                <button
+                  class="action-btn send-btn"
+                  @click.stop="enviarCredenciales(u)"
+                  title="Enviar credenciales de acceso"
+                >
+                  <i class="fas fa-paper-plane"></i>
+                </button>
               </td>
+
             </tr>
           </tbody>
 
@@ -206,7 +232,11 @@
                 </span>
               </td>
               <td class="center">
-                <button class="action-btn delete-btn" @click.stop="remove(getId(r))">
+                <button
+                  class="action-btn delete-btn"
+                  @click.stop="remove(getId(r))"
+                  title="Eliminar rol"
+                >
                   <i class="fas fa-trash-alt"></i>
                 </button>
               </td>
@@ -265,6 +295,7 @@ export default {
       ROLE_MUTATION_BASE: `${BASE_URL}/usuario/rol`,
       editMode: false,
       backupRows: [],
+      loading: false,
     };
   },
   computed: {
@@ -314,6 +345,18 @@ export default {
     this.fetchData();
   },
   methods: {
+    async enviarCredenciales(usuario) {
+        try {
+          this.loading = true; // 🔹 mostrar animación
+          await axios.post(`${BASE_URL}/usuario/${usuario.idUsuario}/enviarCredenciales`);
+          Swal.fire('Enviado', 'Se han enviado las credenciales al usuario.', 'success');
+        } catch (err) {
+          console.error('❌ Error al enviar credenciales:', err);
+          Swal.fire('Error', 'No se pudieron enviar las credenciales.', 'error');
+        } finally {
+          this.loading = false; // 🔹 ocultar animación al terminar
+        }
+      },
     toggleSortDirection() {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     },
@@ -468,26 +511,27 @@ export default {
     async handleGuardarNuevo(payload) {
       try {
         if (this.currentTab === 'usuarios') {
+          if (!payload.correo || payload.correo.trim() === '') {
+            Swal.fire('Advertencia', 'Debe ingresar un correo válido para enviar las credenciales.', 'warning');
+            return;
+      }
           await axios.post(`${BASE_URL}/usuario`, payload, {
             headers: { 'Content-Type': 'application/json' }
           });
-        } else {
-          const body = {
-            nombreRol: payload.nombreRol?.trim() || '',
-            activo: payload.activo ?? true,
-            accesos: Array.isArray(payload.accesos) ? payload.accesos : [],
-          };
 
-          if (!body.nombreRol) {
-            Swal.fire('Validación', 'El nombre del rol es obligatorio.', 'warning');
-            return;
-          }
-
-          await axios.post(this.ROLE_MUTATION_BASE, body, {
-            headers: { 'Content-Type': 'application/json' }
+          Swal.fire({
+            icon: 'success',
+            title: 'Usuario creado correctamente',
+            html: `
+              Se ha enviado automáticamente un correo con las credenciales iniciales.<br><br>
+              <strong>Usuario:</strong> CI del usuario<br>
+              <strong>Contraseña:</strong> inicialNombre + apellido + CI<br><br>
+              Ejemplo: <em>Rc9172358</em>
+            `,
+            confirmButtonText: 'Entendido',
+            confirmButtonColor: '#83cabb',
           });
         }
-
         this.showPopup = false;
         await Promise.all([this.fetchData(this.currentPage), this.fetchAllRoles()]);
         Swal.fire('Éxito', 'Registro creado correctamente.', 'success');
@@ -497,7 +541,6 @@ export default {
         Swal.fire('Error', String(msg), 'error');
       }
     },
-
     async remove(id) {
       const ok = await Swal.fire({
         title: '¿Eliminar registro?',
@@ -629,11 +672,6 @@ th { background: #263D42; color: #fff; }
   border: 1px solid #c0392b;
 }
 
-.edit-btn {
-  background-color: #83cabb;
-}
-
-
 /* --- SWITCH TOGGLE --- */
 .switch {
   position: relative;
@@ -669,8 +707,9 @@ input:checked + .slider:before {
   transform: translateX(22px);
 }
 
-/* --- BOTONES --- */
+/* --- BOTONES DE ACCIÓN --- */
 .action-btn {
+  position: relative;
   padding: 10px;
   margin: 0 5px;
   border: none;
@@ -678,10 +717,79 @@ input:checked + .slider:before {
   cursor: pointer;
   color: white;
   transition: all 0.3s ease;
+  font-size: 18px;
 }
-.delete-btn { background-color: #8E6C88; }
-.action-btn i { font-size: 20px; }
-.action-btn:hover { transform: scale(1.05); opacity: 0.9; }
+
+/* Hover general */
+.action-btn:hover {
+  transform: scale(1.12);
+  opacity: 0.9;
+}
+
+/* Colores por acción */
+.edit-btn {
+  background-color: #8E6C88; /* azul */
+}
+.edit-btn:hover {
+  background-color: #b18caa;
+}
+
+.delete-btn {
+  background-color: #d67070; /* rojo */
+}
+.delete-btn:hover {
+  background-color: #c76969;
+}
+
+.send-btn {
+  background-color: #8ccfc2; /* verde brillante */
+  box-shadow: 0 0 6px rgba(0, 184, 148, 0.5);
+}
+.send-btn:hover {
+  background-color: #6aada1;
+  box-shadow: 0 0 10px rgba(0, 184, 148, 0.7);
+}
+
+/* --- TOOLTIP PERSONALIZADO --- */
+.action-btn::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* Triángulo inferior del tooltip */
+.action-btn::before {
+  content: '';
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #000 transparent transparent transparent;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+/* Mostrar tooltip al pasar el mouse */
+.action-btn:hover::after,
+.action-btn:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+  z-index: 10;
+}
 
 /* --- Badges de roles con colores --- */
 .role-badge-wrap {
@@ -715,7 +823,7 @@ input:checked + .slider:before {
 }
 
 .role-default {
-  background-color: #999; /* gris por defecto */
+  background-color: #b361b6; /* gris por defecto */
 }
 
 .edit-input {
@@ -751,4 +859,62 @@ input:checked + .slider:before {
   cursor: pointer;
 }
 
+/* === ANIMACIÓN DE CARGA === */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.ball {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  animation: wave 1.5s ease-in-out infinite;
+  background-color: #37bf57;
+}
+
+.ball:nth-child(2) {
+  animation-delay: -0.2s;
+  background-color: #49caa1;
+}
+
+.ball:nth-child(3) {
+  animation-delay: -0.4s;
+  background-color: #12aab4;
+}
+
+.ball:nth-child(4) {
+  animation-delay: -0.6s;
+  background-color: #2c88c1;
+}
+
+.ball:nth-child(5) {
+  animation-delay: -0.8s;
+  background-color: #6b45b1;
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: translateY(30px);
+  }
+  50% {
+    transform: translateY(-30px);
+  }
+}
+
 </style>
+
