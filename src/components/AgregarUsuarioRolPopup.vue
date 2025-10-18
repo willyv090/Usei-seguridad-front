@@ -69,7 +69,10 @@
 
               <div class="form-group">
                 <label for="carrera">Carrera</label>
-                <input id="carrera" v-model="form.carrera" type="text" />
+                <select id="carrera" v-model="form.carrera" required>
+                  <option disabled value="">Selecciona una carrera…</option>
+                  <option v-for="c in carreras" :key="c" :value="c">{{ c }}</option>
+                </select>
               </div>
 
               <div class="form-group">
@@ -140,7 +143,7 @@ const swal = Swal.mixin({
 export default {
   name: 'NuevoItemPopup',
   emits: ['close', 'guardar'],
-  props: { mode: String, roles: Array },
+  props: { mode: String, roles: Array, carreras: Array },
   data() {
     return {
       step: 1,

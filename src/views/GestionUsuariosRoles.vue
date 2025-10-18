@@ -123,8 +123,12 @@
               <!-- Carrera -->
               <td>
                 <span v-if="!editMode">{{ u.carrera }}</span>
-                <input v-else v-model="u.carrera" class="edit-input" />
+                <select v-else v-model="u.carrera" class="edit-input">
+                  <option disabled value="">Selecciona una carrera</option>
+                  <option v-for="c in carreras" :key="c" :value="c">{{ c }}</option>
+                </select>
               </td>
+
 
               <!-- Rol -->
               <td>
@@ -259,6 +263,7 @@
       v-if="showPopup"
       :mode="currentTab === 'roles' ? 'roles' : 'usuarios'"
       :roles="allRoles"
+      :carreras="carreras"
       @close="closePopup"
       @guardar="handleGuardarNuevo"
     />
@@ -296,6 +301,27 @@ export default {
       editMode: false,
       backupRows: [],
       loading: false,
+      carreras: [
+      "Ingeniería de Sistemas",
+      "Ingeniería Civil",
+      "Ingeniería Comercial",
+      "Ingeniería Ambiental",
+      "Psicología",
+      "Administración de Empresas",
+      "Contaduría Pública",
+      "Arquitectura",
+      "Derecho",
+      "Comunicación Social",
+      "Medicina",
+      "Bioquímica",
+      "Enfermería",
+      "Filosofía y Letras",
+      "Educación",
+      "Trabajo Social",
+      "Economía",
+      "Turismo",
+],
+
     };
   },
   computed: {
