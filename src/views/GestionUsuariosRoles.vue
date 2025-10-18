@@ -51,7 +51,7 @@
           :placeholder="currentTab === 'usuarios' ? 'Buscar por CI, nombre o correo' : 'Buscar por nombre de rol'"
           @input="fetchData(1)"
         />
-        <select v-model.number="perPage" @change="fetchData(1)">
+        <select v-model.number="perPage">
           <option :value="5">5</option>
           <option :value="10">10</option>
           <option :value="20">20</option>
@@ -66,18 +66,18 @@
         <table>
           <thead>
             <tr>
-              <th>CI</th>
-              <th>Nombre completo</th>
-              <th>Correo</th>
-              <th>Teléfono</th>
-              <th>Carrera</th>
-              <th>Rol</th>
+              <th @click="setSort('ci')">CI</th>
+              <th @click="setSort('nombre')">Nombre completo</th>
+              <th @click="setSort('correo')">Correo</th>
+              <th @click="setSort('telefono')">Teléfono</th>
+              <th @click="setSort('carrera')">Carrera</th>
+              <th @click="setSort('rol')">Rol</th>
               <th class="center">Acciones</th>
             </tr>
           </thead>
           <tbody>
             <tr
-              v-for="(u, idx) in rows"
+              v-for="(u, idx) in paginatedRows"
               :key="getId(u) || idx"
               :class="{ selected: selectedId === getId(u) }"
               @click="selectRow(u)"
@@ -171,7 +171,7 @@
         <table>
           <thead>
             <tr>
-              <th>Nombre del rol</th>
+              <th @click="setSort('nombreRol')">Nombre del rol</th>
               <th>Activo</th>
               <th>Accesos</th>
               <th class="center">Acciones</th>
@@ -179,7 +179,7 @@
           </thead>
           <tbody>
             <tr
-              v-for="(r, idx) in rows"
+              v-for="(r, idx) in paginatedRows"
               :key="getId(r) || idx"
               :class="{ selected: selectedId === getId(r) }"
               @click="selectRow(r)"
@@ -211,6 +211,7 @@
                 </button>
               </td>
             </tr>
+
           </tbody>
         </table>
       </div>
@@ -266,11 +267,60 @@ export default {
       backupRows: [],
     };
   },
+  computed: {
+    // Filtrado + ordenamiento
+    filteredRows() {
+      const term = this.searchTerm.toLowerCase().trim();
+      let filtered = this.rows;
+
+      if (term) {
+        if (this.currentTab === 'usuarios') {
+          filtered = this.rows.filter(u =>
+            (u.nombre?.toLowerCase().includes(term)) ||
+            (u.apellido?.toLowerCase().includes(term)) ||
+            (u.ci?.toLowerCase().includes(term)) ||
+            (u.correo?.toLowerCase().includes(term))
+          );
+        } else {
+          filtered = this.rows.filter(r =>
+            (r.nombreRol?.toLowerCase().includes(term))
+          );
+        }
+      }
+
+      // Ordenamiento asc/desc
+      filtered = [...filtered].sort((a, b) => {
+        const valA = (a[this.sortBy] || '').toString().toLowerCase();
+        const valB = (b[this.sortBy] || '').toString().toLowerCase();
+        if (valA < valB) return this.sortDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return this.sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+
+      // Recalcular páginas
+      this.totalPages = Math.ceil(filtered.length / this.perPage) || 1;
+      return filtered;
+    },
+
+    // Paginación local
+    paginatedRows() {
+      const start = (this.currentPage - 1) * this.perPage;
+      return this.filteredRows.slice(start, start + this.perPage);
+    },
+  },
+
   mounted() {
     this.fetchAllRoles();
     this.fetchData();
   },
   methods: {
+    toggleSortDirection() {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    },
+    setSort(field) {
+      if (this.sortBy === field) this.toggleSortDirection();
+      else this.sortBy = field;
+    },
     switchTab(tab) {
       this.currentTab = tab;
       this.resetTableParams();
@@ -649,15 +699,15 @@ input:checked + .slider:before {
 }
 
 .role-seguridad {
-  background-color: #d9534f; /* rojo */
+  background-color: #da726e; /* rojo */
 }
 
 .role-estudiante {
-  background-color: #5cb85c; /* verde */
+  background-color: #7cb97c; /* verde */
 }
 
 .role-director {
-  background-color: #0275d8; /* azul */
+  background-color: #74abdb; /* azul */
 }
 
 .role-administrador {
