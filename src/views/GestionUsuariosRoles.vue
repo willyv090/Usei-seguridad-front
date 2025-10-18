@@ -33,7 +33,16 @@
             <i class="fas fa-plus-circle"></i>&nbsp;Nuevo
           </button>
         </div>
-      </div>
+        <!-- Botones a la derecha solo en modo edición -->
+          <div class="toolbar-right" v-if="editMode">
+            <button class="pill save-btn" @click="guardarCambios">
+              <i class="fas fa-save"></i>&nbsp;Guardar cambios
+            </button>
+            <button class="pill cancel-btn" @click="cancelarEdicion">
+              <i class="fas fa-times"></i>&nbsp;Cancelar
+            </button>
+          </div>
+        </div>
 
       <!-- Filtros -->
       <div class="filters">
@@ -57,10 +66,11 @@
         <table>
           <thead>
             <tr>
-              <th>UserID/CI</th>
-              <th>Nombre</th>
+              <th>CI</th>
+              <th>Nombre completo</th>
               <th>Correo</th>
               <th>Teléfono</th>
+              <th>Carrera</th>
               <th>Rol</th>
               <th class="center">Acciones</th>
             </tr>
@@ -72,18 +82,87 @@
               :class="{ selected: selectedId === getId(u) }"
               @click="selectRow(u)"
             >
-              <td>{{ u.usuario }}</td>
-              <td>{{ u.nombre }}</td>
-              <td>{{ u.correo }}</td>
-              <td>{{ u.telefono }}</td>
-              <td><span class="badge">{{ u.rol }}</span></td>
+              <!-- CI -->
+              <td>
+                <span v-if="!editMode">{{ u.ci }}</span>
+                <input v-else v-model="u.ci" class="edit-input" />
+              </td>
+
+              <!-- Nombre completo -->
+              <td>
+                <span v-if="!editMode">{{ u.nombre }} {{ u.apellido }}</span>
+                <div v-else class="edit-name">
+                  <input v-model="u.nombre" placeholder="Nombre" class="edit-input small" />
+                  <input v-model="u.apellido" placeholder="Apellido" class="edit-input small" />
+                </div>
+              </td>
+
+              <!-- Correo -->
+              <td>
+                <span v-if="!editMode">{{ u.correo }}</span>
+                <input v-else v-model="u.correo" class="edit-input" />
+              </td>
+
+              <!-- Teléfono -->
+              <td>
+                <span v-if="!editMode">{{ u.telefono }}</span>
+                <input v-else v-model="u.telefono" class="edit-input" />
+              </td>
+
+              <!-- Carrera -->
+              <td>
+                <span v-if="!editMode">{{ u.carrera }}</span>
+                <input v-else v-model="u.carrera" class="edit-input" />
+              </td>
+
+              <!-- Rol -->
+              <td>
+                <div class="role-badge-wrap">
+                  <span
+                    v-if="!editMode"
+                    class="badge"
+                    :class="'role-' + (u.rol || 'default').toLowerCase()"
+                  >
+                    {{ u.rol }}
+                  </span>
+
+                  <select
+                    v-else
+                    class="role-select"
+                    v-model="u.rol"
+                  >
+                    <option
+                      v-for="rol in allRoles"
+                      :key="rol.idRol"
+                      :value="rol.nombreRol"
+                    >
+                      {{ rol.nombreRol }}
+                    </option>
+                  </select>
+                </div>
+              </td>
+
+              <!-- Acciones -->
               <td class="center">
-                <button class="action-btn delete-btn" @click.stop="remove(getId(u))">
+                <button
+                  v-if="!editMode"
+                  class="action-btn edit-btn"
+                  @click.stop="activarEdicion"
+                >
+                  <i class="fas fa-pen"></i>
+                </button>
+                <button
+                  class="action-btn delete-btn"
+                  @click.stop="remove(getId(u))"
+                >
                   <i class="fas fa-trash-alt"></i>
                 </button>
               </td>
             </tr>
           </tbody>
+
+
+
         </table>
       </div>
 
@@ -118,7 +197,13 @@
                 </label>
               </td>
               <td>
-                <span>{{ Array.isArray(r.accesos) ? r.accesos.join(', ') : r.accesos }}</span>
+                <span>
+                  {{
+                    Array.isArray(r.accesos)
+                      ? (r.accesos.length ? r.accesos.join(', ') : 'Sin accesos')
+                      : (r.accesos || 'Sin accesos')
+                  }}
+                </span>
               </td>
               <td class="center">
                 <button class="action-btn delete-btn" @click.stop="remove(getId(r))">
@@ -177,6 +262,8 @@ export default {
       showPopup: false,
       ROLE_LIST_URL: `${BASE_URL}/usuario/rol`,
       ROLE_MUTATION_BASE: `${BASE_URL}/usuario/rol`,
+      editMode: false,
+      backupRows: [],
     };
   },
   mounted() {
@@ -204,44 +291,98 @@ export default {
     },
 
     async fetchData(page = 1) {
-      try {
-        const url = this.currentTab === 'usuarios'
-          ? `${BASE_URL}/usuario`
-          : this.ROLE_LIST_URL;
+  try {
+    const url = this.currentTab === 'usuarios'
+      ? `${BASE_URL}/usuario`
+      : this.ROLE_LIST_URL;
 
-        const { data } = await axios.get(url);
-        if (Array.isArray(data)) this.rows = data;
-        else if (Array.isArray(data?.content)) this.rows = data.content;
-        else if (Array.isArray(data?.roles)) this.rows = data.roles;
-        else this.rows = [];
+    const { data } = await axios.get(url);
 
-        this.rows = this.rows.map(r => ({
-          idRol: r.idRol || r.id_rol,
-          nombreRol: r.nombreRol || r.nombre_rol,
-          activo: r.activo,
-          accesos: typeof r.accesos === 'string' ? r.accesos.split(',') : r.accesos,
-        }));
+    // 👇 Log aquí dentro del try
+    console.log('🔎 Datos recibidos del backend:', data);
 
-        this.totalPages = data?.totalPages || 1;
-        this.currentPage = page;
-      } catch (error) {
-        console.error('❌ Error al cargar datos:', error);
-        Swal.fire('Error', 'No se pudo cargar la información.', 'error');
-      }
-    },
+    if (this.currentTab === 'usuarios') {
+      const usuarios = Array.isArray(data) ? data : [];
+      this.rows = usuarios.map(u => ({
+        idUsuario: u.idUsuario || u.id_usuario,
+        ci: u.ci || '',
+        nombre: u.nombre || '',
+        apellido: u.apellido || '',
+        correo: u.correo || '',
+        telefono: u.telefono || '',
+        carrera: u.carrera || '',
+        // ✅ Lógica simplificada para mostrar rol
+        rol: u.rol || u.rolEntity?.nombreRol || 'Sin rol'
+      }));
+
+    } else {
+      let roles = [];
+      if (Array.isArray(data)) roles = data;
+      else if (Array.isArray(data?.content)) roles = data.content;
+      else if (Array.isArray(data?.roles)) roles = data.roles;
+
+      this.rows = roles.map(r => ({
+        idRol: r.idRol || r.id_rol,
+        nombreRol: r.nombreRol || r.nombre_rol,
+        activo: r.activo ?? false,
+        accesos: r.accesos
+          ? r.accesos.split(',').map(a => a.trim()).filter(a => a.length > 0)
+          : [],
+      }));
+    }
+
+    this.totalPages = data?.totalPages || 1;
+    this.currentPage = page;
+  } catch (error) {
+    console.error('❌ Error al cargar datos:', error);
+    Swal.fire('Error', 'No se pudo cargar la información.', 'error');
+  }
+},
 
     async fetchAllRoles() {
-      try {
-        const { data } = await axios.get(this.ROLE_LIST_URL);
-        if (Array.isArray(data)) this.allRoles = data;
-        else if (Array.isArray(data?.content)) this.allRoles = data.content;
-        else if (Array.isArray(data?.roles)) this.allRoles = data.roles;
-        else this.allRoles = [];
-      } catch (error) {
-        console.error('❌ Error al cargar roles:', error);
-        this.allRoles = [];
+        try {
+          const { data } = await axios.get(this.ROLE_LIST_URL);
+          if (Array.isArray(data)) this.allRoles = data;
+          else if (Array.isArray(data?.content)) this.allRoles = data.content;
+          else if (Array.isArray(data?.roles)) this.allRoles = data.roles;
+          else this.allRoles = [];
+        } catch (error) {
+          console.error('❌ Error al cargar roles:', error);
+          this.allRoles = [];
+        }
+      },
+
+      async updateUserRole(usuario) {
+    try {
+      const userId = usuario.idUsuario;
+      const nuevoRol = usuario.rol;
+
+      // Encuentra el objeto completo del rol
+      const rolSeleccionado = this.allRoles.find(
+        r => r.nombreRol === nuevoRol
+      );
+
+      if (!rolSeleccionado) {
+        Swal.fire('Error', 'Rol seleccionado no válido.', 'error');
+        return;
       }
-    },
+
+      await axios.put(`${BASE_URL}/usuario/${userId}/rol`, {
+        idRol: rolSeleccionado.idRol
+      });
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Rol actualizado correctamente',
+        timer: 1300,
+        showConfirmButton: false
+      });
+    } catch (error) {
+      console.error('❌ Error al actualizar rol:', error);
+      Swal.fire('Error', 'No se pudo actualizar el rol del usuario.', 'error');
+    }
+  },
+
 
     async toggleActivo(rol) {
       const nuevoEstado = !rol.activo;
@@ -257,8 +398,8 @@ export default {
           showConfirmButton: false
         });
       } catch (e) {
-        console.error('❌ Error al cambiar estado:', e);
         rol.activo = estadoAnterior;
+        console.error('❌ Error al cambiar estado:', e);
         Swal.fire('Error', 'No se pudo cambiar el estado del rol.', 'error');
       }
     },
@@ -277,25 +418,31 @@ export default {
     async handleGuardarNuevo(payload) {
       try {
         if (this.currentTab === 'usuarios') {
-          await axios.post(`${BASE_URL}/usuario`, payload);
+          await axios.post(`${BASE_URL}/usuario`, payload, {
+            headers: { 'Content-Type': 'application/json' }
+          });
         } else {
           const body = {
-            nombreRol: payload.nombreRol?.trim(),
-            activo: payload.activo === 'true' || payload.activo === true,
-            accesos: payload.accesos || [],
+            nombreRol: payload.nombreRol?.trim() || '',
+            activo: payload.activo ?? true,
+            accesos: Array.isArray(payload.accesos) ? payload.accesos : [],
           };
+
           if (!body.nombreRol) {
             Swal.fire('Validación', 'El nombre del rol es obligatorio.', 'warning');
             return;
           }
-          await axios.post(this.ROLE_MUTATION_BASE, body);
+
+          await axios.post(this.ROLE_MUTATION_BASE, body, {
+            headers: { 'Content-Type': 'application/json' }
+          });
         }
 
         this.showPopup = false;
         await Promise.all([this.fetchData(this.currentPage), this.fetchAllRoles()]);
         Swal.fire('Éxito', 'Registro creado correctamente.', 'success');
       } catch (e) {
-        console.error('❌ Error al guardar:', e);
+        console.error('❌ Error al guardar rol o usuario:', e.response?.data || e.message);
         const msg = e?.response?.data ?? 'No se pudo crear el registro.';
         Swal.fire('Error', String(msg), 'error');
       }
@@ -327,6 +474,64 @@ export default {
         Swal.fire('Error', String(msg), 'error');
       }
     },
+    activarEdicion() {
+    this.editMode = true;
+    // Hacer una copia profunda de la tabla actual para poder cancelar luego
+    this.backupRows = JSON.parse(JSON.stringify(this.rows));
+  },
+
+  cancelarEdicion() {
+    this.editMode = false;
+    // Restaurar datos originales
+    this.rows = JSON.parse(JSON.stringify(this.backupRows));
+    Swal.fire('Cancelado', 'No se realizaron cambios.', 'info');
+  },
+
+  async guardarCambios() {
+      try {
+        // Detectar cambios reales comparando backup y actual
+        const cambios = this.rows.filter((u, i) => {
+          const original = this.backupRows[i];
+          return JSON.stringify(u) !== JSON.stringify(original);
+        });
+
+        if (!cambios.length) {
+          Swal.fire('Sin cambios', 'No hay modificaciones para guardar.', 'info');
+          this.editMode = false;
+          return;
+        }
+
+        for (const usuario of cambios) {
+          const rolSel = this.allRoles.find(r => r.nombreRol === usuario.rol);
+          const body = {
+            ci: usuario.ci,
+            nombre: usuario.nombre,
+            apellido: usuario.apellido,
+            correo: usuario.correo,
+            telefono: usuario.telefono,
+            carrera: usuario.carrera,
+            idRol: rolSel ? rolSel.idRol : null
+          };
+
+          await axios.put(`${BASE_URL}/usuario/${usuario.idUsuario}`, body, {
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Cambios guardados correctamente',
+          timer: 1500,
+          showConfirmButton: false,
+        });
+
+        this.editMode = false;
+        await this.fetchData(this.currentPage);
+      } catch (err) {
+        console.error('❌ Error al guardar cambios:', err);
+        Swal.fire('Error', 'No se pudieron guardar los cambios.', 'error');
+      }
+    },
 
     handlePageClick(page) {
       this.fetchData(page);
@@ -354,6 +559,27 @@ table { width: 100%; border-collapse: collapse; }
 th, td { border: 1px solid #263D42; padding: 10px; background: #fff; }
 th { background: #263D42; color: #fff; }
 .center { text-align: center; }
+.toolbar-right {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.save-btn {
+  background-color: #90b991;
+  border: 1px solid #4f7551;
+}
+
+.cancel-btn {
+  background-color: #d68680;
+  border: 1px solid #c0392b;
+}
+
+.edit-btn {
+  background-color: #83cabb;
+}
+
 
 /* --- SWITCH TOGGLE --- */
 .switch {
@@ -403,4 +629,73 @@ input:checked + .slider:before {
 .delete-btn { background-color: #8E6C88; }
 .action-btn i { font-size: 20px; }
 .action-btn:hover { transform: scale(1.05); opacity: 0.9; }
+
+/* --- Badges de roles con colores --- */
+.role-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.role-seguridad {
+  background-color: #d9534f; /* rojo */
+}
+
+.role-estudiante {
+  background-color: #5cb85c; /* verde */
+}
+
+.role-director {
+  background-color: #0275d8; /* azul */
+}
+
+.role-administrador {
+  background-color: #8E6C88; /* violeta */
+}
+
+.role-default {
+  background-color: #999; /* gris por defecto */
+}
+
+.edit-input {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 13px;
+}
+
+.edit-name {
+  display: flex;
+  gap: 6px;
+}
+
+.edit-input.small {
+  width: 48%;
+}
+
+.edit-input:focus {
+  outline: none;
+  border-color: #83cabb;
+  box-shadow: 0 0 2px #83cabb;
+}
+
+/* --- Dropdown compacto para roles --- */
+.role-select {
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #f9f9f9;
+  font-size: 13px;
+  cursor: pointer;
+}
+
 </style>

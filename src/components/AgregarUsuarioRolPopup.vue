@@ -1,6 +1,6 @@
 <template>
   <div class="popup-overlay" @click.self="$emit('close')">
-    <div class="popup-content" :class="{ 'wide-mode': step === 2 }">
+    <div class="popup-content" :class="{ 'wide-mode': step === 2 && mode === 'roles' }">
       <!-- Botón cerrar -->
       <button class="close-btn" @click="$emit('close')">×</button>
 
@@ -22,25 +22,23 @@
           <form @submit.prevent>
             <template v-if="mode==='usuarios'">
               <div class="form-group">
-                <label for="usuario">Cédula / UserID</label>
-                <input id="usuario" v-model="form.usuario" type="text" required />
+                <label for="ci">Cédula de Identidad</label>
+                <input id="ci" v-model="form.ci" type="text" required />
               </div>
+
               <div class="form-group">
                 <label for="nombre">Nombre</label>
                 <input id="nombre" v-model="form.nombre" type="text" required />
               </div>
+
+              <div class="form-group">
+                <label for="apellido">Apellido</label>
+                <input id="apellido" v-model="form.apellido" type="text" required />
+              </div>
+
               <div class="form-group">
                 <label for="correo">Correo</label>
                 <input id="correo" v-model="form.correo" type="email" required />
-              </div>
-              <div class="form-group">
-                <label for="password">Contraseña (opcional)</label>
-                <div class="password-wrapper">
-                  <input :type="showPassword?'text':'password'" id="password" v-model="form.contrasenia" />
-                  <span class="toggle-password" @click="showPassword=!showPassword">
-                    <i :class="showPassword ? 'fas fa-eye' : 'fas fa-eye-slash'"></i>
-                  </span>
-                </div>
               </div>
             </template>
 
@@ -68,16 +66,18 @@
                 <label for="telefono">Teléfono</label>
                 <input id="telefono" v-model="form.telefono" type="text" />
               </div>
+
+              <div class="form-group">
+                <label for="carrera">Carrera</label>
+                <input id="carrera" v-model="form.carrera" type="text" />
+              </div>
+
               <div class="form-group">
                 <label for="rol">Rol</label>
-                <select id="rol" v-model="form.rol" required>
-                  <option value="" disabled>Selecciona…</option>
-                  <option v-for="r in roles" :key="r.nombre" :value="r.nombre">{{ r.nombre }}</option>
+                <select id="rol" v-model="form.idRol" required>
+                  <option value="" disabled>Selecciona un rol…</option>
+                  <option v-for="r in roles" :key="r.idRol" :value="r.idRol">{{ r.nombreRol }}</option>
                 </select>
-              </div>
-              <div class="form-group">
-                <label for="correoAlt">Correo alterno (opcional)</label>
-                <input id="correoAlt" v-model="form.correoAlterno" type="email" />
               </div>
             </template>
 
@@ -146,8 +146,9 @@ export default {
       step: 1,
       showPassword: false,
       form: this.mode === 'usuarios'
-        ? { usuario: '', nombre: '', correo: '', contrasenia: '', telefono: '', rol: '', correoAlterno: '' }
+        ? { ci: '', nombre: '', apellido: '', correo: '', telefono: '', carrera: '', idRol: ''}
         : { nombreRol: '', activo: true, accesos: [] },
+
       modulos: {
         estudiante: ['Encuesta de Graduación', 'Certificados', 'Soporte/Ayuda', 'Estado del Proceso'],
         administrador: ['Estudiantes', 'Encuesta de Graduación', 'Certificados', 'Editar Encuesta', 'Editar Certificado', 'Reportes', 'Datos', 'Noticias/Anuncios', 'Soporte/Ayuda', 'Estudiantes Registrados', 'Plazos'],
@@ -159,11 +160,12 @@ export default {
   computed: {
     resumenUsuario() {
       const f = this.form
-      return `Usuario/CI: ${f.usuario}
-Nombre: ${f.nombre}
+      return `CI: ${f.ci}
+Nombre completo: ${f.nombre} ${f.apellido}
 Correo: ${f.correo}
 Teléfono: ${f.telefono}
-Rol: ${f.rol}`
+Carrera: ${f.carrera}
+Rol asignado: ${f.idRol}`
     },
     resumenRol() {
       const f = this.form
@@ -184,22 +186,29 @@ Accesos: ${f.accesos.length ? f.accesos.map(a => a.split(':')[1]).join(', ') : '
     },
     goToStep(num) {
       if (num === 2 && this.step === 1) {
-        if (this.mode === 'usuarios' && (!this.form.usuario || !this.form.nombre || !this.form.correo))
-          return swal.fire({ icon: 'warning', title: 'Completa los campos del paso 1.' })
-        else if (!this.form.nombreRol)
-          return swal.fire({ icon: 'warning', title: 'El nombre del rol es obligatorio.' })
+        if (this.mode === 'usuarios') {
+          if (!this.form.ci || !this.form.nombre || !this.form.apellido || !this.form.correo) {
+            return swal.fire({ icon: 'warning', title: 'Completa los campos del paso 1.' });
+          }
+        } else if (this.mode === 'roles') {
+          if (!this.form.nombreRol || !this.form.nombreRol.trim()) {
+            return swal.fire({ icon: 'warning', title: 'El nombre del rol es obligatorio.' });
+          }
+        }
       }
-      this.step = num
+      this.step = num;
     },
+
     submitForm() {
       if (this.mode === 'usuarios') {
-        const required = ['usuario', 'nombre', 'correo', 'rol']
-        if (required.some(k => !String(this.form[k] || '').trim()))
+        const required = ['ci', 'nombre', 'apellido', 'correo', 'idRol']
+        if (required.some(k => !String(this.form[k] || '').trim())) {
           return swal.fire({ icon: 'warning', title: 'Completa todos los obligatorios.' })
-      } else if (!this.form.nombreRol)
-        return swal.fire({ icon: 'warning', title: 'El nombre del rol es obligatorio.' })
+        }
+      }
       this.$emit('guardar', { ...this.form })
     }
+
   }
 }
 </script>
