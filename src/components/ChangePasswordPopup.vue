@@ -6,27 +6,95 @@
         <form @submit.prevent="handleChangePassword">
           <div class="form-group">
             <label for="newPassword">Nueva Contraseña</label>
-            <input type="password" id="newPassword" v-model="newPassword" required>
-            <!-- Instrucciones de contraseña segura -->
-            <p class="password-requirements">
-              La contraseña debe contener al menos:
-              <ul>
-                <li>8 caracteres</li>
-                <li>1 letra</li>
-                <li>1 número</li>
-                <li>1 carácter especial (@$!%*?&)</li>
-              </ul>
-            </p>
+              <div class="password-input-container">
+                <input 
+                  :type="showPassword ? 'text' : 'password'" 
+                  id="newPassword" 
+                  v-model="newPassword" 
+                  @input="checkPasswordStrength"
+                  required
+                >
+                <button 
+                  type="button" 
+                  class="toggle-password-btn" 
+                  @click="showPassword = !showPassword"
+                  :title="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                >
+                  <span v-if="showPassword">👁️</span>
+                  <span v-else>👁️‍🗨️</span>
+                </button>
+              </div>
+            
+              <!-- Indicador de complejidad de contraseña -->
+              <div v-if="newPassword" class="password-strength-container">
+                <div class="password-strength-bar">
+                  <div 
+                    class="password-strength-fill" 
+                    :class="passwordStrength.class"
+                    :style="{ width: passwordStrength.percentage + '%' }"
+                  ></div>
+                </div>
+                <p class="password-strength-text" :class="passwordStrength.class">
+                  Complejidad: {{ passwordStrength.text }}
+                </p>
+              </div>
+
+              <!-- Instrucciones de contraseña segura -->
+              <div class="password-requirements">
+                <p class="requirements-title">La contraseña debe contener:</p>
+                <ul>
+                  <li :class="{ 'requirement-met': validations.minLength }">
+                    <span class="requirement-icon">{{ validations.minLength ? '✓' : '✗' }}</span>
+                    Mínimo 12 caracteres
+                  </li>
+                  <li :class="{ 'requirement-met': validations.hasUpperCase }">
+                    <span class="requirement-icon">{{ validations.hasUpperCase ? '✓' : '✗' }}</span>
+                    Al menos una letra mayúscula
+                  </li>
+                  <li :class="{ 'requirement-met': validations.hasLowerCase }">
+                    <span class="requirement-icon">{{ validations.hasLowerCase ? '✓' : '✗' }}</span>
+                    Al menos una letra minúscula
+                  </li>
+                  <li :class="{ 'requirement-met': validations.hasNumber }">
+                    <span class="requirement-icon">{{ validations.hasNumber ? '✓' : '✗' }}</span>
+                    Al menos un número
+                  </li>
+                  <li :class="{ 'requirement-met': validations.hasSpecialChar }">
+                    <span class="requirement-icon">{{ validations.hasSpecialChar ? '✓' : '✗' }}</span>
+                Al menos un carácter especial (@$!%*?&amp;#)
+                  </li>
+                  <li :class="{ 'requirement-met': validations.noSequential }">
+                    <span class="requirement-icon">{{ validations.noSequential ? '✓' : '✗' }}</span>
+                    Sin números secuenciales (ej: 123, 987)
+                  </li>
+                </ul>
+              </div>
           </div>
           <div class="form-group">
             <label for="confirmPassword">Confirmar Nueva Contraseña</label>
-            <input type="password" id="confirmPassword" v-model="confirmPassword" required>
+              <div class="password-input-container">
+                <input 
+                  :type="showConfirmPassword ? 'text' : 'password'" 
+                  id="confirmPassword" 
+                  v-model="confirmPassword" 
+                  required
+                >
+                <button 
+                  type="button" 
+                  class="toggle-password-btn" 
+                  @click="showConfirmPassword = !showConfirmPassword"
+                  :title="showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                >
+                  <span v-if="showConfirmPassword">👁️</span>
+                  <span v-else>👁️‍🗨️</span>
+                </button>
+              </div>
           </div>
   
           <!-- Mostrar mensaje de error si las contraseñas no coinciden -->
           <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
   
-          <button type="submit" class="submit-btn" >Cambiar Contraseña</button>
+            <button type="submit" class="submit-btn" :disabled="!isPasswordValid">Cambiar Contraseña</button>
           <h2></h2>
         </form>
         <button class="role-btn" @click="$emit('switch-to-student-login')">Cancelar</button>
@@ -46,9 +114,119 @@
         confirmPassword: '',  // Confirmar nueva contraseña
         errorMessage: '',      // Mensaje de error
         selectedRole: localStorage.getItem('selectedRole'), // Obtener rol almacenado
+          showPassword: false,  // Mostrar/ocultar nueva contraseña
+          showConfirmPassword: false,  // Mostrar/ocultar confirmación de contraseña
+          validations: {
+            minLength: false,
+            hasUpperCase: false,
+            hasLowerCase: false,
+            hasNumber: false,
+            hasSpecialChar: false,
+            noSequential: false
+          },
+          passwordStrength: {
+            percentage: 0,
+            text: 'Muy débil',
+            class: 'very-weak'
+          }
       };
     },
+      computed: {
+        isPasswordValid() {
+          return Object.values(this.validations).every(v => v === true);
+        }
+      },
     methods: {
+        checkPasswordStrength() {
+          const password = this.newPassword;
+        
+          // Validar longitud mínima (12 caracteres)
+          this.validations.minLength = password.length >= 12;
+        
+          // Validar mayúsculas
+          this.validations.hasUpperCase = /[A-Z]/.test(password);
+        
+          // Validar minúsculas
+          this.validations.hasLowerCase = /[a-z]/.test(password);
+        
+          // Validar números
+          this.validations.hasNumber = /\d/.test(password);
+        
+          // Validar caracteres especiales
+          this.validations.hasSpecialChar = /[@$!%*?&#]/.test(password);
+        
+          // Validar que no tenga números secuenciales
+          this.validations.noSequential = !this.hasSequentialNumbers(password);
+        
+          // Calcular complejidad
+          this.calculatePasswordStrength();
+        },
+      
+        hasSequentialNumbers(password) {
+          // Detectar secuencias ascendentes (123, 234, etc.)
+          for (let i = 0; i < password.length - 2; i++) {
+            const char1 = password.charCodeAt(i);
+            const char2 = password.charCodeAt(i + 1);
+            const char3 = password.charCodeAt(i + 2);
+          
+            // Verificar si son números consecutivos
+            if (char1 >= 48 && char1 <= 57 && // 0-9
+                char2 === char1 + 1 && 
+                char3 === char2 + 1) {
+              return true;
+            }
+          
+            // Verificar secuencias descendentes (987, 876, etc.)
+            if (char1 >= 48 && char1 <= 57 && 
+                char2 === char1 - 1 && 
+                char3 === char2 - 1) {
+              return true;
+            }
+          }
+          return false;
+        },
+      
+        calculatePasswordStrength() {
+          const validCount = Object.values(this.validations).filter(v => v === true).length;
+          const totalValidations = Object.keys(this.validations).length;
+        
+          // Calcular porcentaje basado en validaciones cumplidas
+          const percentage = (validCount / totalValidations) * 100;
+        
+          // Determinar nivel de complejidad
+          if (percentage < 40) {
+            this.passwordStrength = {
+              percentage: percentage,
+              text: 'Muy débil',
+              class: 'very-weak'
+            };
+          } else if (percentage < 60) {
+            this.passwordStrength = {
+              percentage: percentage,
+              text: 'Débil',
+              class: 'weak'
+            };
+          } else if (percentage < 80) {
+            this.passwordStrength = {
+              percentage: percentage,
+              text: 'Media',
+              class: 'medium'
+            };
+          } else if (percentage < 100) {
+            this.passwordStrength = {
+              percentage: percentage,
+              text: 'Fuerte',
+              class: 'strong'
+            };
+          } else {
+            this.passwordStrength = {
+              percentage: 100,
+              text: 'Muy fuerte',
+              class: 'very-strong'
+            };
+          }
+        },
+      
       async handleChangePassword() {
         // Verificar que las contraseñas coincidan
         if (this.newPassword !== this.confirmPassword) {
@@ -56,11 +234,9 @@
           return;
         }
   
-        // Validar que la nueva contraseña sea segura
-        const passwordRegex = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-        
-        if (!passwordRegex.test(this.newPassword)) {
-          this.errorMessage = 'La contraseña debe tener al menos 8 caracteres, incluir una letra, un número y un carácter especial.';
+          // Verificar que todas las validaciones se cumplan
+          if (!this.isPasswordValid) {
+            this.errorMessage = 'La contraseña no cumple con todos los requisitos de seguridad.';
           return;
         }
 
@@ -155,10 +331,35 @@
     margin-bottom: 15px;
   }
   
-  .form-group input {
+    .password-input-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .password-input-container input {
     width: 100%;
     padding: 8px;
+      padding-right: 40px;
     border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .toggle-password-btn {
+      position: absolute;
+      right: 10px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .toggle-password-btn:hover {
+      opacity: 0.7;
   }
   
   .submit-btn {
@@ -169,25 +370,125 @@
     color: white;
     cursor: pointer;
     border-radius: 5px;
+      transition: background-color 0.3s;
+    }
+
+    .submit-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+      opacity: 0.6;
   }
   
   .submit-btn:hover {
     background-color: #8e6c88;
   }
   
+    .submit-btn:disabled:hover {
+      background-color: #ccc;
+    }
+
+    .password-strength-container {
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+
+    .password-strength-bar {
+      width: 100%;
+      height: 8px;
+      background-color: #e0e0e0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 5px;
+    }
+
+    .password-strength-fill {
+      height: 100%;
+      transition: width 0.3s ease, background-color 0.3s ease;
+      border-radius: 4px;
+    }
+
+    .password-strength-text {
+      font-size: 13px;
+      font-weight: bold;
+      margin: 0;
+      text-align: center;
+    }
+
+    .very-weak {
+      background-color: #dc3545;
+      color: #fff;
+    }
+
+    .weak {
+      background-color: #fd7e14;
+      color: #fff;
+    }
+
+    .medium {
+      background-color: #ffc107;
+      color: #fff;
+    }
+
+    .strong {
+      background-color: #20c997;
+      color: #fff;
+    }
+
+    .very-strong {
+      background-color: #28a745;
+      color: #fff;
+    }
+
   .password-requirements {
-    font-size: 14px;
+      font-size: 13px;
     color: #666;
-    margin-top: 5px;
+      margin-top: 10px;
+      background-color: #f8f9fa;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .requirements-title {
+      margin: 0 0 8px 0;
+      font-weight: bold;
+      font-size: 14px;
+      color: #333;
   }
 
   .password-requirements ul {
     list-style-type: disc;
-    padding-left: 20px;
+      padding-left: 0;
+      margin: 0;
   }
 
   .password-requirements li {
-    margin-bottom: 5px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      transition: color 0.3s;
+    }
+
+    .requirement-icon {
+      display: inline-block;
+      width: 20px;
+      margin-right: 8px;
+      font-weight: bold;
+    }
+
+    .requirement-met {
+      color: #28a745;
+    }
+
+    .requirement-met .requirement-icon {
+      color: #28a745;
+    }
+
+    .password-requirements li:not(.requirement-met) {
+      color: #dc3545;
+    }
+
+    .password-requirements li:not(.requirement-met) .requirement-icon {
+      color: #dc3545;
   }
 
   .error-message {
