@@ -230,7 +230,6 @@ export default {
   background-color: #63C7B2;
   color: white;
 }
-</style>
 
 /* Estilos para el botón de mostrar/ocultar contraseña (igual que ChangePasswordPopup) */
 .password-input-container {
@@ -265,3 +264,4 @@ export default {
   opacity: 0.7;
 }
 
+</style>
