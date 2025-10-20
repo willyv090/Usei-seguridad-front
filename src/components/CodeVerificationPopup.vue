@@ -58,8 +58,10 @@
         });
       try {
         // Consumir la API para enviar el código de verificación (endpoint universal por correo)
-        const response = await this.$publicAxios.post(`${BASE_URL}/auth/enviarCodigoVerificacion/${this.email}`);
-        
+        const response = await this.$publicAxios.post(
+          `${BASE_URL}/usuario/enviarCodigoVerificacion`,
+          { correo: this.email }
+        );
         // Cerrar el mensaje de carga
         Swal.close();
 

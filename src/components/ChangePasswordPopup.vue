@@ -1,283 +1,216 @@
 <template>
-    <div class="popup-overlay" @click.self="$emit('close')">
-      <div class="popup-content">
-        <button class="close-btn" @click="$emit('close')">&times;</button>
-        <h2>Cambiar Contraseña</h2>
-        <form @submit.prevent="handleChangePassword">
-          <div class="form-group">
-            <label for="newPassword">Nueva Contraseña</label>
-              <div class="password-input-container">
-                <input 
-                  :type="showPassword ? 'text' : 'password'" 
-                  id="newPassword" 
-                  v-model="newPassword" 
-                  @input="checkPasswordStrength"
-                  required
-                >
-                <button 
-                  type="button" 
-                  class="toggle-password-btn" 
-                  @click="showPassword = !showPassword"
-                  :title="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-                >
-                  <span v-if="showPassword">👁️</span>
-                  <span v-else>👁️‍🗨️</span>
-                </button>
-              </div>
-            
-              <!-- Indicador de complejidad de contraseña -->
-              <div v-if="newPassword" class="password-strength-container">
-                <div class="password-strength-bar">
-                  <div 
-                    class="password-strength-fill" 
-                    :class="passwordStrength.class"
-                    :style="{ width: passwordStrength.percentage + '%' }"
-                  ></div>
-                </div>
-                <p class="password-strength-text" :class="passwordStrength.class">
-                  Complejidad: {{ passwordStrength.text }}
-                </p>
-              </div>
+  <div class="popup-overlay" @click.self="$emit('close')">
+    <div class="popup-content">
+      <button class="close-btn" @click="$emit('close')">&times;</button>
+      <h2>Cambiar Contraseña</h2>
+      <form @submit.prevent="handleChangePassword">
+        <div class="form-group">
+          <label for="newPassword">Nueva Contraseña</label>
+          <div class="password-input-container">
+            <input 
+              :type="showPassword ? 'text' : 'password'" 
+              id="newPassword" 
+              v-model="newPassword" 
+              @input="checkPasswordStrength"
+              required
+            >
+            <button 
+              type="button" 
+              class="toggle-password-btn" 
+              @click="showPassword = !showPassword"
+              :title="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <span v-if="showPassword">👁️</span>
+              <span v-else>👁️‍🗨️</span>
+            </button>
+          </div>
 
-              <!-- Instrucciones de contraseña segura -->
-              <div class="password-requirements">
-                <p class="requirements-title">La contraseña debe contener:</p>
-                <ul>
-                  <li :class="{ 'requirement-met': validations.minLength }">
-                    <span class="requirement-icon">{{ validations.minLength ? '✓' : '✗' }}</span>
-                    Mínimo 12 caracteres
-                  </li>
-                  <li :class="{ 'requirement-met': validations.hasUpperCase }">
-                    <span class="requirement-icon">{{ validations.hasUpperCase ? '✓' : '✗' }}</span>
-                    Al menos una letra mayúscula
-                  </li>
-                  <li :class="{ 'requirement-met': validations.hasLowerCase }">
-                    <span class="requirement-icon">{{ validations.hasLowerCase ? '✓' : '✗' }}</span>
-                    Al menos una letra minúscula
-                  </li>
-                  <li :class="{ 'requirement-met': validations.hasNumber }">
-                    <span class="requirement-icon">{{ validations.hasNumber ? '✓' : '✗' }}</span>
-                    Al menos un número
-                  </li>
-                  <li :class="{ 'requirement-met': validations.hasSpecialChar }">
-                    <span class="requirement-icon">{{ validations.hasSpecialChar ? '✓' : '✗' }}</span>
-                Al menos un carácter especial (@$!%*?&amp;#)
-                  </li>
-                  <li :class="{ 'requirement-met': validations.noSequential }">
-                    <span class="requirement-icon">{{ validations.noSequential ? '✓' : '✗' }}</span>
-                    Sin números secuenciales (ej: 123, 987)
-                  </li>
-                </ul>
-              </div>
+          <!-- Indicador de complejidad de contraseña -->
+          <div v-if="newPassword" class="password-strength-container">
+            <div class="password-strength-bar">
+              <div 
+                class="password-strength-fill" 
+                :class="passwordStrength.class"
+                :style="{ width: passwordStrength.percentage + '%' }"
+              ></div>
+            </div>
+            <p class="password-strength-text" :class="passwordStrength.class">
+              Complejidad: {{ passwordStrength.text }}
+            </p>
           </div>
-          <div class="form-group">
-            <label for="confirmPassword">Confirmar Nueva Contraseña</label>
-              <div class="password-input-container">
-                <input 
-                  :type="showConfirmPassword ? 'text' : 'password'" 
-                  id="confirmPassword" 
-                  v-model="confirmPassword" 
-                  required
-                >
-                <button 
-                  type="button" 
-                  class="toggle-password-btn" 
-                  @click="showConfirmPassword = !showConfirmPassword"
-                  :title="showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
-                >
-                  <span v-if="showConfirmPassword">👁️</span>
-                  <span v-else>👁️‍🗨️</span>
-                </button>
-              </div>
+
+          <!-- Instrucciones -->
+          <div class="password-requirements">
+            <p class="requirements-title">La contraseña debe contener:</p>
+            <ul>
+              <li :class="{ 'requirement-met': validations.minLength }">
+                <span class="requirement-icon">{{ validations.minLength ? '✓' : '✗' }}</span>
+                Mínimo 12 caracteres
+              </li>
+              <li :class="{ 'requirement-met': validations.hasUpperCase }">
+                <span class="requirement-icon">{{ validations.hasUpperCase ? '✓' : '✗' }}</span>
+                Al menos una letra mayúscula
+              </li>
+              <li :class="{ 'requirement-met': validations.hasLowerCase }">
+                <span class="requirement-icon">{{ validations.hasLowerCase ? '✓' : '✗' }}</span>
+                Al menos una letra minúscula
+              </li>
+              <li :class="{ 'requirement-met': validations.hasNumber }">
+                <span class="requirement-icon">{{ validations.hasNumber ? '✓' : '✗' }}</span>
+                Al menos un número
+              </li>
+              <li :class="{ 'requirement-met': validations.hasSpecialChar }">
+                <span class="requirement-icon">{{ validations.hasSpecialChar ? '✓' : '✗' }}</span>
+                Al menos un carácter especial (@$!%*?&#)
+              </li>
+              <li :class="{ 'requirement-met': validations.noSequential }">
+                <span class="requirement-icon">{{ validations.noSequential ? '✓' : '✗' }}</span>
+                Sin números secuenciales (ej: 123, 987)
+              </li>
+            </ul>
           </div>
-  
-          <!-- Mostrar mensaje de error si las contraseñas no coinciden -->
-          <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
-  
-            <button type="submit" class="submit-btn" :disabled="!isPasswordValid">Cambiar Contraseña</button>
-          <h2></h2>
-        </form>
-        <button class="role-btn" @click="$emit('switch-to-student-login')">Cancelar</button>
-      </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirmar Nueva Contraseña</label>
+          <div class="password-input-container">
+            <input 
+              :type="showConfirmPassword ? 'text' : 'password'" 
+              id="confirmPassword" 
+              v-model="confirmPassword" 
+              required
+            >
+            <button 
+              type="button" 
+              class="toggle-password-btn" 
+              @click="showConfirmPassword = !showConfirmPassword"
+              :title="showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <span v-if="showConfirmPassword">👁️</span>
+              <span v-else>👁️‍🗨️</span>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+
+        <button type="submit" class="submit-btn" :disabled="!isPasswordValid">Cambiar Contraseña</button>
+        <h2></h2>
+      </form>
+      <button class="role-btn" @click="$emit('switch-to-student-login')">Cancelar</button>
     </div>
-  </template>
-  
-  <script>
-  import Swal from 'sweetalert2';  // Utiliza SweetAlert para mensajes
-  import { BASE_URL } from '@/config/globals';
-  
-  export default {
-    name: 'ChangePasswordPopup',
-    data() {
-      return {
-        newPassword: '',      // Nueva contraseña
-        confirmPassword: '',  // Confirmar nueva contraseña
-        errorMessage: '',      // Mensaje de error
-        showPassword: false,  // Mostrar/ocultar nueva contraseña
-        showConfirmPassword: false,  // Mostrar/ocultar confirmación de contraseña
-          validations: {
-            minLength: false,
-            hasUpperCase: false,
-            hasLowerCase: false,
-            hasNumber: false,
-            hasSpecialChar: false,
-            noSequential: false
-          },
-          passwordStrength: {
-            percentage: 0,
-            text: 'Muy débil',
-            class: 'very-weak'
-          }
-      };
-    },
-      computed: {
-        isPasswordValid() {
-          return Object.values(this.validations).every(v => v === true);
-        }
+  </div>
+</template>
+
+<script>
+import Swal from 'sweetalert2';
+import { BASE_URL } from '@/config/globals';
+
+export default {
+  name: 'ChangePasswordPopup',
+  data() {
+    return {
+      newPassword: '',
+      confirmPassword: '',
+      errorMessage: '',
+      showPassword: false,
+      showConfirmPassword: false,
+      validations: {
+        minLength: false,
+        hasUpperCase: false,
+        hasLowerCase: false,
+        hasNumber: false,
+        hasSpecialChar: false,
+        noSequential: false
       },
-    methods: {
-        checkPasswordStrength() {
-          const password = this.newPassword;
-        
-          // Validar longitud mínima (12 caracteres)
-          this.validations.minLength = password.length >= 12;
-        
-          // Validar mayúsculas
-          this.validations.hasUpperCase = /[A-Z]/.test(password);
-        
-          // Validar minúsculas
-          this.validations.hasLowerCase = /[a-z]/.test(password);
-        
-          // Validar números
-          this.validations.hasNumber = /\d/.test(password);
-        
-          // Validar caracteres especiales
-          this.validations.hasSpecialChar = /[@$!%*?&#]/.test(password);
-        
-          // Validar que no tenga números secuenciales
-          this.validations.noSequential = !this.hasSequentialNumbers(password);
-        
-          // Calcular complejidad
-          this.calculatePasswordStrength();
-        },
-      
-        hasSequentialNumbers(password) {
-          // Detectar secuencias ascendentes (123, 234, etc.)
-          for (let i = 0; i < password.length - 2; i++) {
-            const char1 = password.charCodeAt(i);
-            const char2 = password.charCodeAt(i + 1);
-            const char3 = password.charCodeAt(i + 2);
-          
-            // Verificar si son números consecutivos
-            if (char1 >= 48 && char1 <= 57 && // 0-9
-                char2 === char1 + 1 && 
-                char3 === char2 + 1) {
-              return true;
-            }
-          
-            // Verificar secuencias descendentes (987, 876, etc.)
-            if (char1 >= 48 && char1 <= 57 && 
-                char2 === char1 - 1 && 
-                char3 === char2 - 1) {
-              return true;
-            }
-          }
-          return false;
-        },
-      
-        calculatePasswordStrength() {
-          const validCount = Object.values(this.validations).filter(v => v === true).length;
-          const totalValidations = Object.keys(this.validations).length;
-        
-          // Calcular porcentaje basado en validaciones cumplidas
-          const percentage = (validCount / totalValidations) * 100;
-        
-          // Determinar nivel de complejidad
-          if (percentage < 40) {
-            this.passwordStrength = {
-              percentage: percentage,
-              text: 'Muy débil',
-              class: 'very-weak'
-            };
-          } else if (percentage < 60) {
-            this.passwordStrength = {
-              percentage: percentage,
-              text: 'Débil',
-              class: 'weak'
-            };
-          } else if (percentage < 80) {
-            this.passwordStrength = {
-              percentage: percentage,
-              text: 'Media',
-              class: 'medium'
-            };
-          } else if (percentage < 100) {
-            this.passwordStrength = {
-              percentage: percentage,
-              text: 'Fuerte',
-              class: 'strong'
-            };
-          } else {
-            this.passwordStrength = {
-              percentage: 100,
-              text: 'Muy fuerte',
-              class: 'very-strong'
-            };
-          }
-        },
-      
-      async handleChangePassword() {
-        // Verificar que las contraseñas coincidan
-        if (this.newPassword !== this.confirmPassword) {
-          this.errorMessage = 'Las contraseñas no coinciden.';
-          return;
-        }
-  
-          // Verificar que todas las validaciones se cumplan
-          if (!this.isPasswordValid) {
-            this.errorMessage = 'La contraseña no cumple con todos los requisitos de seguridad.';
-          return;
-        }
+      passwordStrength: {
+        percentage: 0,
+        text: 'Muy débil',
+        class: 'very-weak'
+      }
+    };
+  },
+  computed: {
+    isPasswordValid() {
+      return Object.values(this.validations).every(v => v === true);
+    }
+  },
+  methods: {
+    checkPasswordStrength() {
+      const password = this.newPassword;
+      this.validations.minLength = password.length >= 12;
+      this.validations.hasUpperCase = /[A-Z]/.test(password);
+      this.validations.hasLowerCase = /[a-z]/.test(password);
+      this.validations.hasNumber = /\d/.test(password);
+      this.validations.hasSpecialChar = /[@$!%*?&#]/.test(password);
+      this.validations.noSequential = !this.hasSequentialNumbers(password);
+      this.calculatePasswordStrength();
+    },
+    hasSequentialNumbers(password) {
+      for (let i = 0; i < password.length - 2; i++) {
+        const c1 = password.charCodeAt(i);
+        const c2 = password.charCodeAt(i + 1);
+        const c3 = password.charCodeAt(i + 2);
+        if (c1 >= 48 && c1 <= 57 && c2 === c1 + 1 && c3 === c2 + 1) return true;      // asc
+        if (c1 >= 48 && c1 <= 57 && c2 === c1 - 1 && c3 === c2 - 1) return true;      // desc
+      }
+      return false;
+    },
+    calculatePasswordStrength() {
+      const validCount = Object.values(this.validations).filter(v => v).length;
+      const total = Object.keys(this.validations).length;
+      const percentage = (validCount / total) * 100;
+      if (percentage < 40) this.passwordStrength = { percentage, text: 'Muy débil', class: 'very-weak' };
+      else if (percentage < 60) this.passwordStrength = { percentage, text: 'Débil', class: 'weak' };
+      else if (percentage < 80) this.passwordStrength = { percentage, text: 'Media', class: 'medium' };
+      else if (percentage < 100) this.passwordStrength = { percentage, text: 'Fuerte', class: 'strong' };
+      else this.passwordStrength = { percentage: 100, text: 'Muy fuerte', class: 'very-strong' };
+    },
 
-        // Resetear mensaje de error
-        this.errorMessage = '';
-  
-        try {
-          // Obtener el ID del usuario desde localStorage (independiente del rol)
-          const idUsuario = localStorage.getItem('idUsuarioCorreo');
-          
-          if (!idUsuario) {
-            throw new Error('No se encontró el ID del usuario');
-          }
+    async handleChangePassword() {
+      if (this.newPassword !== this.confirmPassword) {
+        this.errorMessage = 'Las contraseñas no coinciden.';
+        return;
+      }
+      if (!this.isPasswordValid) {
+        this.errorMessage = 'La contraseña no cumple con todos los requisitos de seguridad.';
+        return;
+      }
+      this.errorMessage = '';
 
-          // Llamada al backend para cambiar la contraseña (endpoint universal)
-          await this.$publicAxios.put(`${BASE_URL}/auth/change-password?idUsuario=${idUsuario}`, {
-            newPassword: this.newPassword
-          });
-  
-          // Manejar respuesta exitosa
-          Swal.fire({
-            icon: 'success',
-            title: 'Contraseña cambiada',
-            text: 'Tu contraseña ha sido cambiada correctamente.',
-            confirmButtonText: 'Aceptar',
-          });
-  
-          // Cerrar el popup
-          this.$emit('close');
-        } catch (error) {
-          // Manejar errores
-          Swal.fire({
-            icon: 'error',
-            title: 'Error al cambiar la contraseña',
-            text: 'Ha ocurrido un error, por favor intenta nuevamente.',
-            confirmButtonText: 'Aceptar',
-          });
-        }
+      try {
+        const idUsuario = localStorage.getItem('idUsuarioCorreo');
+        if (!idUsuario) throw new Error('No se encontró el ID del usuario');
+
+        // ✅ CAMBIO: URL correcta y envío de idUsuario como query param
+        await this.$publicAxios.put(
+          `${BASE_URL}/usuario/change-password`,                  // ✅ CAMBIO
+          { newPassword: this.newPassword },                      // body
+          { params: {idUsuario: localStorage.getItem('idUsuarioCorreo') }}                               // ✅ CAMBIO: query param
+        );
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Contraseña cambiada',
+          text: 'Tu contraseña ha sido cambiada correctamente.',
+          confirmButtonText: 'Aceptar'
+        });
+        this.$emit('close');
+      } catch (error) {
+        // Mostrar mensaje específico del backend si viene texto útil (política, reutilización, etc.)
+        const msg = error?.response?.data || 'Ha ocurrido un error, por favor intenta nuevamente.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al cambiar la contraseña',
+          text: String(msg),
+          confirmButtonText: 'Aceptar'
+        });
       }
     }
-  };
-  </script>
+  }
+};
+</script>
+
   
   <style scoped>
   .popup-overlay {

@@ -49,19 +49,19 @@ const router = createRouter({
       path: '/menu-estudiante',
       name: 'menuEstudiante',
       component: MenuEstudiante,
-      meta: { requiresAuth: true, roles: ['estudiante'] } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['estudiante'] } // Rutas protegidas
     },
     {
       path: '/menu-administrador', // Ruta MenuAdministrador
       name: 'menuAdministrador',
       component: MenuAdministrador,
-      meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
     },
     {
       path: '/menu-director', // Ruta MenuDirector
       name: 'menuDirector',
       component: MenuDirector,
-      meta: { requiresAuth: true, roles: ['Director']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Director']  } // Rutas protegidas
     },
     {
       path:'/encuesta-estudiante',
