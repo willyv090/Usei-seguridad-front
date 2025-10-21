@@ -10,7 +10,23 @@
         </div>
         <div class="form-group">
           <label for="password">Contraseña</label>
-          <input type="password" id="password" v-model="loginRequest.contrasena" required>
+          <div class="password-input-container">
+            <input
+              :type="showPassword ? 'text' : 'password'"
+              id="password"
+              v-model="loginRequest.contrasena"
+              required
+            >
+            <button
+              type="button"
+              class="toggle-password-btn"
+              @click="showPassword = !showPassword"
+              :title="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            >
+              <span v-if="showPassword">👁️</span>
+              <span v-else>👁️‍🗨️</span>
+            </button>
+          </div>
         </div>
         <div class="form-group">
           <a href="#" @click.prevent="$emit('switch-to-code-verification')">Olvidé mi contraseña</a>
@@ -36,7 +52,8 @@ export default {
         correo: '', // Correo para la autenticación
         contrasena: '' // Contraseña para la autenticación
       },
-      message: '' // Variable para almacenar mensajes de error
+      message: '', // Variable para almacenar mensajes de error
+      showPassword: false // Controla la visibilidad de la contraseña
     };
   },
   methods: {
@@ -213,4 +230,38 @@ export default {
   background-color: #63C7B2;
   color: white;
 }
+
+/* Estilos para el botón de mostrar/ocultar contraseña (igual que ChangePasswordPopup) */
+.password-input-container {
+  position: relative;
+  width: 100%;
+}
+.password-input-container input {
+  width: 100%;
+  padding: 8px;
+  padding-right: 40px;
+  border-radius: 15px;
+  border: 1px solid #929292;
+  background: #f0f6ff;
+  box-sizing: border-box;
+}
+.toggle-password-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+}
+.toggle-password-btn:hover {
+  opacity: 0.7;
+}
+
 </style>

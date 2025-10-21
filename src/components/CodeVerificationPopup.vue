@@ -3,20 +3,6 @@
       <div class="popup-content">
         <button class="close-btn" @click="$emit('close')">&times;</button>
         <h2>Cambio de Contraseña</h2>
-
-        <!-- Botones de alternancia para seleccionar entre Estudiante y Director -->
-        <div class="toggle-buttons">
-            <button 
-            :class="{'active': selectedRole === 'Estudiante'}" 
-            @click="selectedRole = 'Estudiante'">
-            Estudiante
-            </button>
-            <button 
-            :class="{'active': selectedRole === 'Director'}" 
-            @click="selectedRole = 'Director'">
-            Director
-            </button>
-        </div>
         
         <!-- Formulario para enviar el correo y recibir el código -->
         <form @submit.prevent="handleSendCode">
@@ -53,7 +39,6 @@
     name: 'ChangePasswordPopup',
     data() {
       return {
-        selectedRole: '', // Opción por defecto
         email: '',                  // Correo electrónico
         verificationCode: '',        // Código de verificación ingresado por el usuario
         sentCode: '',                // Código enviado desde el servidor
@@ -62,22 +47,6 @@
     },
     methods: {
       async handleSendCode() {
-        if (this.selectedRole === 'Estudiante') {
-          localStorage.setItem('selectedRole', 'Estudiante');
-          await this.handleSendCodeStudent();
-        } else if (this.selectedRole === 'Director') {
-          localStorage.setItem('selectedRole', 'Director');
-          await this.handleSendCodeDirector();
-        } else {
-          Swal.fire({
-            icon: 'warning',
-            title: 'Selecciona un rol',
-            text: 'Por favor selecciona Estudiante o Director antes de enviar el código.',
-            confirmButtonText: 'Aceptar',
-          });
-        }
-      },
-      async handleSendCodeStudent() {
         // Mostrar mensaje de carga
         Swal.fire({
           title: 'Enviando código...',
@@ -88,9 +57,11 @@
           }
         });
       try {
-        // Consumir la API para enviar el código de verificación
-        const response = await this.$publicAxios.post(`${BASE_URL}/estudiante/enviarCodigoVerificacion/${this.email}`);
-        
+        // Consumir la API para enviar el código de verificación (endpoint universal por correo)
+        const response = await this.$publicAxios.post(
+          `${BASE_URL}/usuario/enviarCodigoVerificacion`,
+          { correo: this.email }
+        );
         // Cerrar el mensaje de carga
         Swal.close();
 
@@ -101,64 +72,19 @@
           confirmButtonText: 'Aceptar',
         });
         
-        // Guardar el código enviado que llega en la respuesta del backend
+        // Guardar el código enviado y el ID del usuario
         this.sentCode = response.data.codigoVerificacion;
-
-        // Guardar idEstudiante en localStorage
-        localStorage.setItem('idEstudianteCorreo', response.data.idEstudiante);
+        localStorage.setItem('idUsuarioCorreo', response.data.idUsuario);
     
       } catch (error) {
         // Cerrar el mensaje de carga si hay error
-          Swal.close();
-
-      // Mostrar mensaje de error
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo enviar el código de verificación. Intente nuevamente.',
-          confirmButtonText: 'Aceptar',
-        });
-      }
-    },
-    async handleSendCodeDirector() {
-        // Mostrar mensaje de carga
-        Swal.fire({
-          title: 'Enviando código...',
-          text: 'Por favor espera un momento.',
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
-      try {
-        // Consumir la API para enviar el código de verificación
-        const response = await this.$publicAxios.post(`${BASE_URL}/usuario/enviarCodigoVerificacion/${this.email}`);
-        
-        // Cerrar el mensaje de carga
         Swal.close();
 
-        Swal.fire({
-          icon: 'success',
-          title: 'Código enviado',
-          text: 'Se ha enviado un código de verificación a su correo.',
-          confirmButtonText: 'Aceptar',
-        });
-        
-        // Guardar el código enviado que llega en la respuesta del backend
-        this.sentCode = response.data.codigoVerificacion;
-
-        // Guardar idEstudiante en localStorage
-        localStorage.setItem('idDirectorCorreo', response.data.idDirector);
-    
-      } catch (error) {
-        // Cerrar el mensaje de carga si hay error
-          Swal.close();
-
-      // Mostrar mensaje de error
+        // Mostrar mensaje de error
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: 'No se pudo enviar el código de verificación. Intente nuevamente.',
+          text: 'No se pudo enviar el código de verificación. Verifique que el correo sea válido.',
           confirmButtonText: 'Aceptar',
         });
       }
@@ -272,36 +198,5 @@
   .role-btn:hover {
     background-color: #63C7B2;
     color: white;
-  }
-
-  /* Estilos para los botones de alternancia */
-  .toggle-buttons {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 15px;
-  }
-
-  .toggle-buttons button {
-    flex: 1;
-    padding: 10px;
-    background-color: #ddd;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-  }
-
-  .toggle-buttons button:not(:last-child) {
-    margin-right: 10px;
-  }
-
-  .toggle-buttons .active {
-    background-color: #63c7b2;
-    color: white;
-  }
-
-  .toggle-buttons button:hover:not(.active) {
-    background-color: #c4c4c4;
   }
 </style>
