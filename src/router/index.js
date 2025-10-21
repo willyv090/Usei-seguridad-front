@@ -55,7 +55,7 @@ const router = createRouter({
       path: '/menu-administrador', // Ruta MenuAdministrador
       name: 'menuAdministrador',
       component: MenuAdministrador,
-      meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
     },
     {
       path: '/menu-director', // Ruta MenuDirector

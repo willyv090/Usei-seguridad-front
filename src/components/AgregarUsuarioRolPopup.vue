@@ -2,19 +2,22 @@
   <div class="popup-overlay" @click.self="$emit('close')">
     <div class="popup-content" :class="{ 'wide-mode': step === 2 && mode === 'roles' }">
       <!-- Botón cerrar -->
-      <button class="close-btn" @click="$emit('close')">×</button>
+      <button class="close-btn" @click="$emit('close')" title="Cerrar">×</button>
 
-      <h2 v-if="mode==='usuarios'">Registrar Usuario</h2>
+      <h2 v-if="isEditAccessMode">Editar Accesos</h2>
+      <h2 v-else-if="mode==='usuarios'">Registrar Usuario</h2>
       <h2 v-else>Registrar Rol</h2>
+
 
       <!-- Stepper -->
       <div class="stepper">
+        <div v-if="!isEditAccessMode" class="stepper">
         <div v-for="n in 3" :key="n" class="stepper-step" :class="{ active: step >= n }">
           <div class="circle">{{ n }}</div>
           <div v-if="n < 3" class="line"></div>
-        </div>
       </div>
-
+      </div>
+      </div>
       <!-- Contenedor con scroll interno -->
       <div class="popup-body">
         <!-- STEP 1 -->
@@ -119,15 +122,22 @@
       </div>
 
       <!-- Botones SIEMPRE visibles -->
-      <div class="actions">
-        <button v-if="step > 1" class="alt-btn" @click="goToStep(step - 1)">Atrás</button>
-        <button
-          class="submit-btn"
-          @click="step === 3 ? submitForm() : goToStep(step + 1)"
-        >
-          {{ step === 3 ? 'Registrar' : 'Siguiente' }}
-        </button>
-      </div>
+      <div class="actions" v-if="!isEditAccessMode">
+          <button v-if="step > 1" class="alt-btn" @click="goToStep(step - 1)">Atrás</button>
+          <button
+            class="submit-btn"
+            @click="step === 3 ? submitForm() : goToStep(step + 1)"
+          >
+            {{ step === 3 ? 'Registrar' : 'Siguiente' }}
+          </button>
+        </div>
+
+        <!-- Botones para el popup solo para modo edición de la columna accesos -->
+        <div class="actions" v-else>
+          <button class="submit-btn small-btn" @click="submitForm()">Aceptar</button>
+        </div>
+
+
     </div>
   </div>
 </template>
@@ -143,40 +153,103 @@ const swal = Swal.mixin({
 export default {
   name: 'NuevoItemPopup',
   emits: ['close', 'guardar'],
-  props: { mode: String, roles: Array, carreras: Array },
+  props: {
+    mode: String,
+    roles: Array,
+    carreras: Array,
+    initialData: {
+      type: Object,
+      default: null
+    },
+    isEditAccessMode: {
+      type: Boolean,
+      default: false
+    }
+  },
+
   data() {
     return {
       step: 1,
       showPassword: false,
+
+      // 🔹 Formulario base (depende del modo)
       form: this.mode === 'usuarios'
-        ? { ci: '', nombre: '', apellido: '', correo: '', telefono: '', carrera: '', idRol: ''}
-        : { nombreRol: '', activo: true, accesos: [] },
+        ? {
+            ci: '',
+            nombre: '',
+            apellido: '',
+            correo: '',
+            telefono: '',
+            carrera: '',
+            idRol: ''
+          }
+        : {
+            idRol: null,
+            nombreRol: '',
+            activo: true,
+            accesos: []
+          },
 
       modulos: {
-        estudiante: ['Encuesta de Graduación', 'Certificados', 'Soporte/Ayuda', 'Estado del Proceso'],
-        administrador: ['Estudiantes', 'Encuesta de Graduación', 'Certificados', 'Editar Encuesta', 'Editar Certificado', 'Reportes', 'Datos', 'Noticias/Anuncios', 'Soporte/Ayuda', 'Estudiantes Registrados', 'Plazos'],
+        estudiante: [
+          'Encuesta de Graduación',
+          'Certificados',
+          'Soporte/Ayuda',
+          'Estado del Proceso'
+        ],
+        administrador: [
+          'Estudiantes',
+          'Encuesta de Graduación',
+          'Certificados',
+          'Editar Encuesta',
+          'Editar Certificado',
+          'Reportes',
+          'Datos',
+          'Noticias/Anuncios',
+          'Soporte/Ayuda',
+          'Estudiantes Registrados',
+          'Plazos'
+        ],
         director: ['Reportes', 'Seguimiento de estudiantes', 'Soporte/Ayuda'],
-        seguridad: ['Gestión de usuarios y roles', 'Gestión de contraseñas'],
+        seguridad: ['Gestión de usuarios y roles', 'Gestión de contraseñas']
       }
-    }
+    };
   },
   computed: {
     resumenUsuario() {
       const f = this.form
       return `CI: ${f.ci}
-Nombre completo: ${f.nombre} ${f.apellido}
-Correo: ${f.correo}
-Teléfono: ${f.telefono}
-Carrera: ${f.carrera}
-Rol asignado: ${f.idRol}`
+      Nombre completo: ${f.nombre} ${f.apellido}
+      Correo: ${f.correo}
+      Teléfono: ${f.telefono}
+      Carrera: ${f.carrera}
+      Rol asignado: ${f.idRol}`
     },
     resumenRol() {
       const f = this.form
       return `Rol: ${f.nombreRol}
-Activo: ${f.activo ? 'Sí' : 'No'}
-Accesos: ${f.accesos.length ? f.accesos.map(a => a.split(':')[1]).join(', ') : '(sin accesos)'}` 
+        Activo: ${f.activo ? 'Sí' : 'No'}
+        Accesos: ${f.accesos.length ? f.accesos.map(a => a.split(':')[1]).join(', ') : '(sin accesos)'}` 
     }
   },
+  created() {
+      // Si se pasa un rol existente (modo edición)
+      if (this.initialData && this.mode === 'roles') {
+        this.form = {
+          idRol: this.initialData.idRol,
+          nombreRol: this.initialData.nombreRol,
+          activo: this.initialData.activo,
+          accesos: Array.isArray(this.initialData.accesos)
+            ? [...this.initialData.accesos]
+            : (this.initialData.accesos?.split(',') || [])
+        };
+
+        if (this.isEditAccessMode) {
+          this.step = 2;
+        }
+      }
+    },
+
   methods: {
     capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1) },
     toggleAcceso(grupo, mod) {
@@ -204,13 +277,19 @@ Accesos: ${f.accesos.length ? f.accesos.map(a => a.split(':')[1]).join(', ') : '
 
     submitForm() {
       if (this.mode === 'usuarios') {
-        const required = ['ci', 'nombre', 'apellido', 'correo', 'idRol']
+        const required = ['ci', 'nombre', 'apellido', 'correo', 'idRol'];
         if (required.some(k => !String(this.form[k] || '').trim())) {
-          return swal.fire({ icon: 'warning', title: 'Completa todos los obligatorios.' })
+          return swal.fire({ icon: 'warning', title: 'Completa todos los obligatorios.' });
         }
       }
-      this.$emit('guardar', { ...this.form })
-    }
+
+      // Emitir evento de guardado
+      this.$emit('guardar', { ...this.form });
+
+      // 🔹 Cerrar el popup automáticamente tras guardar
+      this.$emit('close');
+    },
+
 
   }
 }
@@ -263,17 +342,23 @@ Accesos: ${f.accesos.length ? f.accesos.map(a => a.split(':')[1]).join(', ') : '
 
 /* Cuerpo con scroll */
 .popup-body {
-  flex: 1;
   overflow-y: auto;
   padding-right: 6px;
   margin-bottom: 10px;
 }
+/* Botón Aceptar más pequeño en modo edición de accesos */
 
+.small-btn {
+  margin-right: 10px;
+  min-width: 110px;
+}
+
+
+/* Botones fijos */
 /* Botones fijos */
 .actions {
   display: flex;
-  justify-content: space-between;
-  gap: 10px;
+  justify-content: flex-end; /* 🔹 ahora alinea el botón a la derecha */
   padding: 10px;
   background: white;
   border-top: 1px solid #CCDBDC;
@@ -281,13 +366,14 @@ Accesos: ${f.accesos.length ? f.accesos.map(a => a.split(':')[1]).join(', ') : '
   bottom: 0;
 }
 .actions button {
-  flex: 1;
-  padding: 10px;
-  font-size: 16px;
+  flex: 0 0 auto; /* 🔹 no crecer ni ocupar todo el espacio */
+  padding: 8px 22px;
+  font-size: 15px;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   cursor: pointer;
 }
+
 .submit-btn { background-color: #63C7B2; color: white; }
 .submit-btn:hover { background-color: #8E6C88; }
 .alt-btn { background-color: #CCDBDC; color: #333; }
@@ -330,7 +416,20 @@ input, select, textarea {
 .modulo-item:hover { background-color: #CCDBDC; }
 
 .close-btn {
-  position: absolute; top: 10px; right: 12px;
-  background: none; border: none; font-size: 20px; cursor: pointer; color: #263D42;
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #263D42;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
+.close-btn:hover {
+  color: #8E6C88;
+  transform: scale(1.2);
+}
+
 </style>

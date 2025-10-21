@@ -87,166 +87,198 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="(u, idx) in paginatedRows"
-              :key="getId(u) || idx"
-              :class="{ selected: selectedId === getId(u) }"
-              @click="selectRow(u)"
-            >
-              <!-- CI -->
-              <td>
-                <span v-if="!editMode">{{ u.ci }}</span>
-                <input v-else v-model="u.ci" class="edit-input" />
-              </td>
+              <tr
+                v-for="(u, idx) in paginatedRows"
+                :key="getId(u) || idx"
+                :class="{ selected: selectedId === getId(u) }"
+                @click="selectRow(u)"
+              >
+                <!-- CI -->
+                <td>
+                  <span v-if="!editMode">{{ u.ci }}</span>
+                  <input v-else v-model="u.ci" class="edit-input" />
+                </td>
 
-              <!-- Nombre completo -->
-              <td>
-                <span v-if="!editMode">{{ u.nombre }} {{ u.apellido }}</span>
-                <div v-else class="edit-name">
-                  <input v-model="u.nombre" placeholder="Nombre" class="edit-input small" />
-                  <input v-model="u.apellido" placeholder="Apellido" class="edit-input small" />
-                </div>
-              </td>
+                <!-- Nombre completo -->
+                <td>
+                  <span v-if="!editMode">{{ u.nombre }} {{ u.apellido }}</span>
+                  <div v-else class="edit-name">
+                    <input v-model="u.nombre" placeholder="Nombre" class="edit-input small" />
+                    <input v-model="u.apellido" placeholder="Apellido" class="edit-input small" />
+                  </div>
+                </td>
 
-              <!-- Correo -->
-              <td>
-                <span v-if="!editMode">{{ u.correo }}</span>
-                <input v-else v-model="u.correo" class="edit-input" />
-              </td>
+                <!-- Correo -->
+                <td>
+                  <span v-if="!editMode">{{ u.correo }}</span>
+                  <input v-else v-model="u.correo" class="edit-input" />
+                </td>
 
-              <!-- Teléfono -->
-              <td>
-                <span v-if="!editMode">{{ u.telefono }}</span>
-                <input v-else v-model="u.telefono" class="edit-input" />
-              </td>
+                <!-- Teléfono -->
+                <td>
+                  <span v-if="!editMode">{{ u.telefono }}</span>
+                  <input v-else v-model="u.telefono" class="edit-input" />
+                </td>
 
-              <!-- Carrera -->
-              <td>
-                <span v-if="!editMode">{{ u.carrera }}</span>
-                <select v-else v-model="u.carrera" class="edit-input">
-                  <option disabled value="">Selecciona una carrera</option>
-                  <option v-for="c in carreras" :key="c" :value="c">{{ c }}</option>
-                </select>
-              </td>
-
-
-              <!-- Rol -->
-              <td>
-                <div class="role-badge-wrap">
-                  <span
-                    v-if="!editMode"
-                    class="badge"
-                    :class="'role-' + (u.rol || 'default').toLowerCase()"
-                  >
-                    {{ u.rol }}
-                  </span>
-
-                  <select
-                    v-else
-                    class="role-select"
-                    v-model="u.rol"
-                  >
-                    <option
-                      v-for="rol in allRoles"
-                      :key="rol.idRol"
-                      :value="rol.nombreRol"
-                    >
-                      {{ rol.nombreRol }}
-                    </option>
+                <!-- Carrera -->
+                <td>
+                  <span v-if="!editMode">{{ u.carrera }}</span>
+                  <select v-else v-model="u.carrera" class="edit-input">
+                    <option disabled value="">Selecciona una carrera</option>
+                    <option v-for="c in carreras" :key="c" :value="c">{{ c }}</option>
                   </select>
-                </div>
-              </td>
-
-              <!-- Acciones -->
-              <td class="center">
-                <!-- Botón de editar -->
-                <button
-                  v-if="!editMode"
-                  class="action-btn edit-btn"
-                  @click.stop="activarEdicion"
-                  title="Modificar usuario"
-                >
-                  <i class="fas fa-pen"></i>
-                </button>
-
-                <!-- Botón de eliminar -->
-                <button
-                  class="action-btn delete-btn"
-                  @click.stop="remove(getId(u))"
-                  title="Eliminar usuario"
-                >
-                  <i class="fas fa-trash-alt"></i>
-                </button>
-
-                <!-- Botón de enviar credenciales -->
-                <button
-                  class="action-btn send-btn"
-                  @click.stop="enviarCredenciales(u)"
-                  title="Enviar credenciales de acceso"
-                >
-                  <i class="fas fa-paper-plane"></i>
-                </button>
-              </td>
-
-            </tr>
-          </tbody>
+                </td>
 
 
+                <!-- Rol -->
+                <td>
+                  <div class="role-badge-wrap">
+                    <span
+                      v-if="!editMode"
+                      class="badge"
+                      :class="'role-' + (u.rol || 'default').toLowerCase()"
+                    >
+                      {{ u.rol }}
+                    </span>
 
-        </table>
-      </div>
+                    <select
+                      v-else
+                      class="role-select"
+                      v-model="u.rol"
+                    >
+                      <option
+                        v-for="rol in allRoles"
+                        :key="rol.idRol"
+                        :value="rol.nombreRol"
+                      >
+                        {{ rol.nombreRol }}
+                      </option>
+                    </select>
+                  </div>
+                </td>
 
-      <!-- Tabla ROLES -->
-      <div v-else class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th @click="setSort('nombreRol')">Nombre del rol</th>
-              <th>Activo</th>
-              <th>Accesos</th>
-              <th class="center">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
+                <!-- Acciones -->
+                <td class="center">
+                  <!-- Botón de editar -->
+                  <button
+                    v-if="!editMode"
+                    class="action-btn edit-btn"
+                    @click.stop="activarEdicion"
+                    title="Modificar usuario"
+                  >
+                    <i class="fas fa-pen"></i>
+                  </button>
+
+                  <!-- Botón de eliminar -->
+                  <button
+                    class="action-btn delete-btn"
+                    @click.stop="remove(getId(u))"
+                    title="Eliminar usuario"
+                  >
+                    <i class="fas fa-trash-alt"></i>
+                  </button>
+
+                  <!-- Botón de enviar credenciales -->
+                  <button
+                    class="action-btn send-btn"
+                    @click.stop="enviarCredenciales(u)"
+                    title="Enviar credenciales de acceso"
+                  >
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </td>
+
+              </tr>
+            </tbody>
+
+
+
+          </table>
+        </div>
+
+        <!-- Tabla ROLES -->
+        <div v-else class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th @click="setSort('nombreRol')">Nombre del rol</th>
+                <th>Activo</th>
+                <th>Accesos</th>
+                <th class="center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
             <tr
               v-for="(r, idx) in paginatedRows"
               :key="getId(r) || idx"
               :class="{ selected: selectedId === getId(r) }"
               @click="selectRow(r)"
             >
-              <td>{{ r.nombreRol || r.nombre_rol }}</td>
+              <!-- Nombre del rol -->
+              <td>
+                <span v-if="!editMode">{{ r.nombreRol }}</span>
+                <input v-else v-model="r.nombreRol" class="edit-input" />
+              </td>
+
+              <!-- Activo -->
               <td class="center">
-                <!-- Toggle Switch -->
                 <label class="switch">
                   <input
                     type="checkbox"
                     :checked="r.activo"
-                    @change.stop="toggleActivo(r)"
+                    @change.stop="r.activo = !r.activo"
+                    :disabled="!editMode"
                   />
                   <span class="slider"></span>
                 </label>
               </td>
-              <td>
-                <span>
-                  {{
-                    Array.isArray(r.accesos)
-                      ? (r.accesos.length ? r.accesos.join(', ') : 'Sin accesos')
-                      : (r.accesos || 'Sin accesos')
-                  }}
-                </span>
-              </td>
-              <td class="center">
-                <button
-                  class="action-btn delete-btn"
-                  @click.stop="remove(getId(r))"
-                  title="Eliminar rol"
-                >
-                  <i class="fas fa-trash-alt"></i>
-                </button>
-              </td>
-            </tr>
 
-          </tbody>
+              <!-- Accesos -->
+                <td>
+                  <div class="flex-access">
+                    <span>
+                      {{
+                        Array.isArray(r.accesos)
+                          ? (r.accesos.length ? r.accesos.join(', ') : 'Sin accesos')
+                          : (r.accesos || 'Sin accesos')
+                      }}
+                    </span>
+
+                    <!-- 🔹 Mostrar botón de editar accesos solo en modo edición -->
+                    <!-- Botón de editar accesos -->
+                    <button
+                      v-if="editMode"
+                      class="action-btn edit-btn small"
+                      @click.stop="abrirPopupEdicionAccesos(r)"
+                      title="Editar accesos"
+                    >
+                      <i class="fas fa-pen"></i>
+                    </button>
+                  </div>
+                </td>
+
+            <!-- Acciones -->
+            <td class="center">
+              <button
+                v-if="!editMode"
+                class="action-btn edit-btn"
+                @click.stop="activarEdicion"
+                title="Modificar rol"
+              >
+                <i class="fas fa-pen"></i>
+              </button>
+
+              <button
+                class="action-btn delete-btn"
+                @click.stop="remove(getId(r))"
+                title="Eliminar rol"
+              >
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </td>
+          </tr>
+  </tbody>
+
         </table>
       </div>
 
@@ -264,9 +296,13 @@
       :mode="currentTab === 'roles' ? 'roles' : 'usuarios'"
       :roles="allRoles"
       :carreras="carreras"
+      :initialData="selectedRol"
+      :isEditAccessMode="popupMode === 'editar-accesos'"
       @close="closePopup"
-      @guardar="handleGuardarNuevo"
+      @guardar="onGuardar"
     />
+
+
   </div>
 </template>
 
@@ -296,8 +332,8 @@ export default {
       selectedId: null,
       totalPages: 1,
       showPopup: false,
-      ROLE_LIST_URL: `${BASE_URL}/usuario/rol`,
-      ROLE_MUTATION_BASE: `${BASE_URL}/usuario/rol`,
+      ROLE_LIST_URL: `${BASE_URL}/rol`,
+      ROLE_MUTATION_BASE: `${BASE_URL}/rol`,
       editMode: false,
       backupRows: [],
       loading: false,
@@ -320,8 +356,10 @@ export default {
       "Trabajo Social",
       "Economía",
       "Turismo",
-],
-
+      "Diseño Gráfico",
+      ],
+        popupMode: '',   
+        selectedRol: null,
     };
   },
   computed: {
@@ -367,6 +405,13 @@ export default {
   },
 
   mounted() {
+    // 🔹 Restaurar pestaña anterior si existe
+    const savedTab = localStorage.getItem('lastTab');
+    if (savedTab) {
+      this.currentTab = savedTab;
+      localStorage.removeItem('lastTab'); // Limpieza opcional
+    }
+
     this.fetchAllRoles();
     this.fetchData();
   },
@@ -383,6 +428,64 @@ export default {
           this.loading = false; // 🔹 ocultar animación al terminar
         }
       },
+        async handleEditarRol(payload) {
+          try {
+            const accesosString = Array.isArray(payload.accesos)
+              ? payload.accesos.join(',')
+              : payload.accesos || '';
+
+            const rolPayload = {
+              idRol: payload.idRol,
+              nombreRol: payload.nombreRol,
+              activo: payload.activo,
+              accesos: accesosString
+            };
+
+            await axios.put(`${this.ROLE_MUTATION_BASE}/${payload.idRol}`, rolPayload, {
+              headers: { 'Content-Type': 'application/json' }
+            });
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Accesos actualizados correctamente',
+              confirmButtonText: 'Aceptar',
+              confirmButtonColor: '#63C7B2'
+            });
+
+            this.showPopup = false;
+
+            // ✅ Refrescar lista automáticamente sin reload
+            await Promise.all([
+              this.fetchData(this.currentPage),
+              this.fetchAllRoles()
+            ]);
+
+          } catch (e) {
+            console.error('❌ Error al editar rol:', e);
+            Swal.fire('Error', e?.response?.data || 'No se pudieron actualizar los accesos.', 'error');
+          }
+        },
+
+
+      onGuardar(payload) {
+          if (this.popupMode === 'editar-accesos') {
+            this.handleEditarRol(payload);
+          } else {
+            this.handleGuardarNuevo(payload);
+          }
+        },
+        
+      abrirPopupEdicionAccesos(rol) {
+          this.showPopup = false;
+          this.$nextTick(() => {
+            this.showPopup = true;
+            this.popupMode = 'editar-accesos'; // <- modo especial
+            this.selectedRol = rol;
+          });
+        },
+      capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
+      },
     toggleSortDirection() {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     },
@@ -391,11 +494,23 @@ export default {
       else this.sortBy = field;
     },
     switchTab(tab) {
+      // Cambiar pestaña
       this.currentTab = tab;
       this.resetTableParams();
+
+      // Cambiar campo de orden según la pestaña
       this.sortBy = tab === 'roles' ? 'nombreRol' : 'nombre';
+
+      // 🔹 Recargar datos automáticamente SIN animación global
+      // (sin usar this.loading)
       this.fetchData();
+
+      // 🔹 Si entras a la pestaña de usuarios, recarga roles activos para el popup
+      if (tab === 'usuarios') {
+        this.fetchAllRoles();
+      }
     },
+
     resetTableParams() {
       this.searchTerm = '';
       this.currentPage = 1;
@@ -459,17 +574,73 @@ export default {
 },
 
     async fetchAllRoles() {
-        try {
-          const { data } = await axios.get(this.ROLE_LIST_URL);
-          if (Array.isArray(data)) this.allRoles = data;
-          else if (Array.isArray(data?.content)) this.allRoles = data.content;
-          else if (Array.isArray(data?.roles)) this.allRoles = data.roles;
-          else this.allRoles = [];
-        } catch (error) {
-          console.error('❌ Error al cargar roles:', error);
-          this.allRoles = [];
+      try {
+        const { data } = await axios.get(this.ROLE_LIST_URL);
+        let roles = [];
+
+        if (Array.isArray(data)) roles = data;
+        else if (Array.isArray(data?.content)) roles = data.content;
+        else if (Array.isArray(data?.roles)) roles = data.roles;
+
+        // ✅ Filtramos solo los roles activos
+        this.allRoles = roles.filter(r => r.activo === true);
+      } catch (error) {
+        console.error('❌ Error al cargar roles:', error);
+        this.allRoles = [];
+      }
+    },
+    async abrirEdicionRol(rol) {
+      const { value: formValues } = await Swal.fire({
+        title: 'Modificar Rol',
+        html: `
+          <input id="nombreRol" class="swal2-input" placeholder="Nombre del rol" value="${rol.nombreRol || ''}">
+          <input id="accesos" class="swal2-input" placeholder="Accesos (separados por coma)" value="${Array.isArray(rol.accesos) ? rol.accesos.join(', ') : rol.accesos || ''}">
+          <label style="display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;margin-top:8px;">
+            <input type="checkbox" id="activo" ${rol.activo ? 'checked' : ''}>
+            Rol activo
+          </label>
+        `,
+        focusConfirm: false,
+        confirmButtonText: 'Guardar',
+        showCancelButton: true,
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#83cabb',
+        preConfirm: () => {
+          return {
+            nombreRol: document.getElementById('nombreRol').value.trim(),
+            accesos: document.getElementById('accesos').value.trim(),
+            activo: document.getElementById('activo').checked
+          };
         }
-      },
+      });
+
+      if (!formValues) return; // cancelado
+
+      try {
+        const payload = {
+          nombreRol: formValues.nombreRol,
+          accesos: formValues.accesos,
+          activo: formValues.activo
+        };
+
+        await axios.put(`${this.ROLE_MUTATION_BASE}/${rol.idRol}`, payload, {
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        await this.fetchData(); // 🔄 refrescar tabla
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Rol actualizado correctamente',
+          confirmButtonText: 'Aceptar',
+          confirmButtonColor: '#63C7B2'
+        });
+      } catch (e) {
+        console.error('❌ Error al actualizar rol:', e);
+        Swal.fire('Error', e?.response?.data || 'No se pudo actualizar el rol.', 'error');
+      }
+    },
+
 
       async updateUserRole(usuario) {
     try {
@@ -531,8 +702,14 @@ export default {
     },
 
     closePopup() {
-      this.showPopup = false;
-    },
+    this.showPopup = false;
+    // 🔄 Refrescar automáticamente los datos al cerrar popup
+    setTimeout(() => {
+      this.fetchData();
+      this.fetchAllRoles();
+    }, 300);
+  },
+
 
     async handleGuardarNuevo(payload) {
       try {
@@ -540,7 +717,8 @@ export default {
           if (!payload.correo || payload.correo.trim() === '') {
             Swal.fire('Advertencia', 'Debe ingresar un correo válido para enviar las credenciales.', 'warning');
             return;
-      }
+          }
+
           await axios.post(`${BASE_URL}/usuario`, payload, {
             headers: { 'Content-Type': 'application/json' }
           });
@@ -557,7 +735,33 @@ export default {
             confirmButtonText: 'Entendido',
             confirmButtonColor: '#83cabb',
           });
+        } 
+        
+        // 🔹 Nueva parte: creación de ROL
+        else if (this.currentTab === 'roles') {
+          // Asegurarnos que accesos sea string, no array
+          const accesosString = Array.isArray(payload.accesos)
+            ? payload.accesos.join(',')   // convierte ["usuarios", "reportes"] → "usuarios,reportes"
+            : payload.accesos || '';
+
+          const rolPayload = {
+            nombreRol: payload.nombreRol,
+            activo: true,
+            accesos: accesosString
+          };
+
+          await axios.post(this.ROLE_MUTATION_BASE, rolPayload, {
+            headers: { 'Content-Type': 'application/json' }
+          });
+
+          Swal.fire({
+            icon: 'success',
+            title: 'Rol creado correctamente',
+            text: 'El rol fue guardado y aparecerá en la lista.',
+            confirmButtonColor: '#83cabb'
+          });
         }
+
         this.showPopup = false;
         await Promise.all([this.fetchData(this.currentPage), this.fetchAllRoles()]);
         Swal.fire('Éxito', 'Registro creado correctamente.', 'success');
@@ -567,6 +771,7 @@ export default {
         Swal.fire('Error', String(msg), 'error');
       }
     },
+
     async remove(id) {
       const ok = await Swal.fire({
         title: '¿Eliminar registro?',
@@ -607,52 +812,67 @@ export default {
   },
 
   async guardarCambios() {
-    try {
-      // Detectar cambios reales comparando backup y actual
-      const cambios = this.rows.filter((u, i) => {
-        const original = this.backupRows[i];
-        return JSON.stringify(u) !== JSON.stringify(original);
-      });
+  try {
+    const cambios = this.rows.filter((item, i) => {
+      const original = this.backupRows[i];
+      return JSON.stringify(item) !== JSON.stringify(original);
+    });
 
-      if (!cambios.length) {
-        Swal.fire('Sin cambios', 'No hay modificaciones para guardar.', 'info');
-        this.editMode = false;
-        return;
-      }
+    if (!cambios.length) {
+      Swal.fire('Sin cambios', 'No hay modificaciones para guardar.', 'info');
+      this.editMode = false;
+      return;
+    }
 
-      for (const usuario of cambios) {
-        const rolSel = this.allRoles.find(r => r.nombreRol === usuario.rol);
+    for (const item of cambios) {
+      if (this.currentTab === 'usuarios') {
+        const rolSel = this.allRoles.find(r => r.nombreRol === item.rol);
         const body = {};
-
-        // Agregamos solo campos que realmente existen (parcheo parcial)
-        if (usuario.ci) body.ci = usuario.ci;
-        if (usuario.nombre) body.nombre = usuario.nombre;
-        if (usuario.apellido) body.apellido = usuario.apellido;
-        if (usuario.correo) body.correo = usuario.correo;
-        if (usuario.telefono) body.telefono = usuario.telefono;
-        if (usuario.carrera) body.carrera = usuario.carrera;
+        if (item.ci) body.ci = item.ci;
+        if (item.nombre) body.nombre = item.nombre;
+        if (item.apellido) body.apellido = item.apellido;
+        if (item.correo) body.correo = item.correo;
+        if (item.telefono) body.telefono = item.telefono;
+        if (item.carrera) body.carrera = item.carrera;
         if (rolSel) body.idRol = rolSel.idRol;
 
-        // 👇 PATCH en lugar de PUT
-        await axios.patch(`${BASE_URL}/usuario/${usuario.idUsuario}`, body, {
+        await axios.patch(`${BASE_URL}/usuario/${item.idUsuario}`, body, {
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } else {
+        const body = {
+          nombreRol: item.nombreRol,
+          activo: item.activo,
+          accesos: Array.isArray(item.accesos)
+            ? item.accesos.join(',')
+            : item.accesos || ''
+        };
+
+        await axios.put(`${this.ROLE_MUTATION_BASE}/${item.idRol}`, body, {
           headers: { 'Content-Type': 'application/json' }
         });
       }
-
-      Swal.fire({
-        icon: 'success',
-        title: 'Cambios guardados correctamente',
-        timer: 1500,
-        showConfirmButton: false,
-      });
-
-      this.editMode = false;
-      await this.fetchData(this.currentPage);
-    } catch (err) {
-      console.error('❌ Error al guardar cambios:', err);
-      Swal.fire('Error', 'No se pudieron guardar los cambios.', 'error');
     }
-  },
+
+    // 🔹 Mostrar confirmación y luego refrescar la página completa
+    Swal.fire({
+      icon: 'success',
+      title: 'Cambios guardados correctamente',
+      timer: 1200,
+      showConfirmButton: false,
+    }).then(() => {
+      // 🔹 Guardar la pestaña actual antes de refrescar
+      localStorage.setItem('lastTab', this.currentTab);
+
+      // 🔄 Refrescar la página completa
+      window.location.reload();
+    });
+  } catch (err) {
+    console.error('❌ Error al guardar cambios:', err);
+    Swal.fire('Error', 'No se pudieron guardar los cambios.', 'error');
+  }
+},
+
 
 
     handlePageClick(page) {
@@ -744,6 +964,13 @@ input:checked + .slider:before {
   color: white;
   transition: all 0.3s ease;
   font-size: 18px;
+}
+td.center .action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 4px;
+  vertical-align: middle;
 }
 
 /* Hover general */
@@ -885,6 +1112,19 @@ input:checked + .slider:before {
   cursor: pointer;
 }
 
+/* --- Popup para edición de accesos   --- */
+.flex-access {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.action-btn.small {
+  padding: 6px;
+  font-size: 14px;
+}
+
+
 /* === ANIMACIÓN DE CARGA === */
 .loading-overlay {
   position: fixed;
@@ -941,6 +1181,37 @@ input:checked + .slider:before {
     transform: translateY(-30px);
   }
 }
+
+.table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.table-wrap th,
+.table-wrap td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.edit-input {
+  width: 100%;
+  height: 30px;
+  padding: 4px 6px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.table-wrap {
+  overflow-y: auto;
+  max-height: 70vh;
+}
+
 
 </style>
 
