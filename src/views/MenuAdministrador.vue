@@ -35,7 +35,7 @@
           <div class="card">
             <img src="@/components/images/certificado_icon.png" alt="Certificados" class="card-icon" />
           </div>
-          <h3>CERTIFICADOS</h3>
+          <h3>SEGUIMIENTO ESTUDIANTES</h3>
           <div class="card-button-container">
             <button class="btn-ingresar" @click="goToEnviarEnc">Ingresar</button>
           </div>
@@ -45,7 +45,7 @@
           <div class="card">
             <img src="@/components/images/formulario_icon.png" alt="Encuesta de Graduación" class="card-icon" />
           </div>
-          <h3>ENCUESTA DE GRADUACIÓN</h3>
+          <h3>VER ENCUESTA DE GRADUACIÓN</h3>
           <div class="card-button-container">
             <button class="btn-ingresar" @click="goToVerPreguntas">Ingresar</button>
           </div>
@@ -88,7 +88,7 @@
           <div class="card">
             <img src="@/components/images/estudiantes.png" alt="Estudiantes" class="card-icon" />
           </div>
-          <h3>ESTUDIANTES</h3>
+          <h3>LISTADO ESTUDIANTES</h3>
           <div class="card-button-container">
             <button class="btn-ingresar" @click="goToListadoEstudiantes">Ingresar</button>
           </div>
@@ -101,7 +101,7 @@
           <div class="card">
             <img src="@/components/images/reportes.png" alt="Reportes" class="card-icon" />
           </div>
-          <h3>REPORTES</h3>
+          <h3>DASHBOARD</h3>
           <div class="card-button-container">
             <button class="btn-ingresar" @click="goToReporteDash">Ingresar</button>
           </div>
@@ -111,7 +111,7 @@
           <div class="card">
             <img src="@/components/images/datos.png" alt="Datos" class="card-icon" />
           </div>
-          <h3>DATOS</h3>
+          <h3>DATOS ESTADÍSTICOS</h3>
           <div class="card-button-container">
             <button class="btn-ingresar" @click="goToDashboard">Ingresar</button>
           </div>
@@ -134,7 +134,7 @@
           <div class="card">
             <img src="@/components/images/noticias.png" alt="Noticias" class="card-icon" />
           </div>
-          <h3>NOTICIAS/ANUNCIOS</h3>
+          <h3>ABM NOTICIAS/ANUNCIOS</h3>
           <div class="card-button-container">
             <button class="btn-ingresar" @click="goToNoticiaForm">Ingresar</button>
           </div>
@@ -155,7 +155,7 @@
           <div class="card">
             <img src="@/components/images/plazos_icon.png" alt="Plazos" class="card-icon" />
           </div>
-          <h3>PLAZOS</h3>
+          <h3>CONFIGURACIÓN PLAZOS</h3>
           <div class="card-button-container">
             <button class="btn-ingresar" @click="goToPlazos">Ingresar</button>
           </div>

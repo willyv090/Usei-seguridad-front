@@ -8,16 +8,16 @@
       <h2 v-else-if="mode==='usuarios'">Registrar Usuario</h2>
       <h2 v-else>Registrar Rol</h2>
 
-
       <!-- Stepper -->
       <div class="stepper">
         <div v-if="!isEditAccessMode" class="stepper">
-        <div v-for="n in 3" :key="n" class="stepper-step" :class="{ active: step >= n }">
-          <div class="circle">{{ n }}</div>
-          <div v-if="n < 3" class="line"></div>
+          <div v-for="n in 3" :key="n" class="stepper-step" :class="{ active: step >= n }">
+            <div class="circle">{{ n }}</div>
+            <div v-if="n < 3" class="line"></div>
+          </div>
+        </div>
       </div>
-      </div>
-      </div>
+
       <!-- Contenedor con scroll interno -->
       <div class="popup-body">
         <!-- STEP 1 -->
@@ -64,6 +64,7 @@
         <!-- STEP 2 -->
         <div v-else-if="step === 2" class="step step-scrollable">
           <form @submit.prevent>
+            <!-- 🔹 Si es modo usuarios -->
             <template v-if="mode==='usuarios'">
               <div class="form-group">
                 <label for="telefono">Teléfono</label>
@@ -87,24 +88,21 @@
               </div>
             </template>
 
+            <!-- 🔹 Si es modo roles -->
             <template v-else>
               <div class="form-group">
                 <label class="titulo-accesos">Accesos (módulos disponibles)</label>
-                <div v-for="(mods, grupo) in modulos" :key="grupo" class="modulo-group">
-                  <h4>{{ capitalize(grupo) }}</h4>
-                  <div class="modulo-grid">
-                    <div
-                      v-for="mod in mods"
-                      :key="grupo + '-' + mod"
-                      class="modulo-item"
-                      :class="{ selected: form.accesos.includes(grupo + ':' + mod) }"
-                      @click="toggleAcceso(grupo, mod)"
-                      @dblclick="removeAcceso(grupo, mod)"
-                    >
-                      <i v-if="form.accesos.includes(grupo + ':' + mod)" class="fas fa-check-square"></i>
-                      <i v-else class="far fa-square"></i>
-                      <span>{{ mod }}</span>
-                    </div>
+                <div class="modulo-grid">
+                  <div
+                    v-for="mod in modulosDisponibles"
+                    :key="mod"
+                    class="modulo-item"
+                    :class="{ selected: form.accesos.includes(mod) }"
+                    @click="toggleAcceso(mod)"
+                  >
+                    <i v-if="form.accesos.includes(mod)" class="fas fa-check-square"></i>
+                    <i v-else class="far fa-square"></i>
+                    <span>{{ mod }}</span>
                   </div>
                 </div>
               </div>
@@ -123,21 +121,19 @@
 
       <!-- Botones SIEMPRE visibles -->
       <div class="actions" v-if="!isEditAccessMode">
-          <button v-if="step > 1" class="alt-btn" @click="goToStep(step - 1)">Atrás</button>
-          <button
-            class="submit-btn"
-            @click="step === 3 ? submitForm() : goToStep(step + 1)"
-          >
-            {{ step === 3 ? 'Registrar' : 'Siguiente' }}
-          </button>
-        </div>
+        <button v-if="step > 1" class="alt-btn" @click="goToStep(step - 1)">Atrás</button>
+        <button
+          class="submit-btn"
+          @click="step === 3 ? submitForm() : goToStep(step + 1)"
+        >
+          {{ step === 3 ? 'Registrar' : 'Siguiente' }}
+        </button>
+      </div>
 
-        <!-- Botones para el popup solo para modo edición de la columna accesos -->
-        <div class="actions" v-else>
-          <button class="submit-btn small-btn" @click="submitForm()">Aceptar</button>
-        </div>
-
-
+      <!-- Botones para el popup solo para modo edición de accesos -->
+      <div class="actions" v-else>
+        <button class="submit-btn small-btn" @click="submitForm()">Aceptar</button>
+      </div>
     </div>
   </div>
 </template>
@@ -190,76 +186,74 @@ export default {
             accesos: []
           },
 
-      modulos: {
-        estudiante: [
-          'Encuesta de Graduación',
-          'Certificados',
-          'Soporte/Ayuda',
-          'Estado del Proceso'
-        ],
-        administrador: [
-          'Estudiantes',
-          'Encuesta de Graduación',
-          'Certificados',
-          'Editar Encuesta',
-          'Editar Certificado',
-          'Reportes',
-          'Datos',
-          'Noticias/Anuncios',
-          'Soporte/Ayuda',
-          'Estudiantes Registrados',
-          'Plazos'
-        ],
-        director: ['Reportes', 'Seguimiento de estudiantes', 'Soporte/Ayuda'],
-        seguridad: ['Gestión de usuarios y roles', 'Gestión de contraseñas']
-      }
+      // ✅ Listado plano de módulos
+      modulosDisponibles: [
+        'Encuesta de Graduación',
+        'Certificados',
+        'Contacto Soporte',
+        'Listado Estudiantes',
+        'Seguimiento de estudiantes',
+        'Editar Certificado',
+        'Editar Encuesta',
+        'Ver Encuesta de graduación',
+        'Dashboard',
+        'Datos Estadísticos',
+        'ABM Noticias/Anuncios',
+        'Soporte/Ayuda',
+        'Configuración de Plazos',
+        'ABM Directores',
+        'ABM Reportes de la encuesta',
+        'Certificados de estudiantes',
+        'Gestión de usuarios y roles',
+        'Gestión de contraseñas'
+      ]
     };
   },
+
   computed: {
     resumenUsuario() {
-      const f = this.form
+      const f = this.form;
       return `CI: ${f.ci}
       Nombre completo: ${f.nombre} ${f.apellido}
       Correo: ${f.correo}
       Teléfono: ${f.telefono}
       Carrera: ${f.carrera}
-      Rol asignado: ${f.idRol}`
+      Rol asignado: ${f.idRol}`;
     },
     resumenRol() {
-      const f = this.form
+      const f = this.form;
       return `Rol: ${f.nombreRol}
         Activo: ${f.activo ? 'Sí' : 'No'}
-        Accesos: ${f.accesos.length ? f.accesos.map(a => a.split(':')[1]).join(', ') : '(sin accesos)'}` 
+        Accesos: ${f.accesos.length ? f.accesos.join(', ') : '(sin accesos)'}`;
     }
   },
-  created() {
-      // Si se pasa un rol existente (modo edición)
-      if (this.initialData && this.mode === 'roles') {
-        this.form = {
-          idRol: this.initialData.idRol,
-          nombreRol: this.initialData.nombreRol,
-          activo: this.initialData.activo,
-          accesos: Array.isArray(this.initialData.accesos)
-            ? [...this.initialData.accesos]
-            : (this.initialData.accesos?.split(',') || [])
-        };
 
-        if (this.isEditAccessMode) {
-          this.step = 2;
-        }
+  created() {
+    if (this.initialData && this.mode === 'roles') {
+      this.form = {
+        idRol: this.initialData.idRol,
+        nombreRol: this.initialData.nombreRol,
+        activo: this.initialData.activo,
+        accesos: Array.isArray(this.initialData.accesos)
+          ? [...this.initialData.accesos]
+          : (this.initialData.accesos?.split(',') || [])
+      };
+
+      if (this.isEditAccessMode) {
+        this.step = 2;
+      }
+    }
+  },
+
+  methods: {
+    toggleAcceso(mod) {
+      if (this.form.accesos.includes(mod)) {
+        this.form.accesos = this.form.accesos.filter(a => a !== mod);
+      } else {
+        this.form.accesos.push(mod);
       }
     },
 
-  methods: {
-    capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1) },
-    toggleAcceso(grupo, mod) {
-      const key = `${grupo}:${mod}`
-      if (!this.form.accesos.includes(key)) this.form.accesos.push(key)
-    },
-    removeAcceso(grupo, mod) {
-      const key = `${grupo}:${mod}`
-      this.form.accesos = this.form.accesos.filter(m => m !== key)
-    },
     goToStep(num) {
       if (num === 2 && this.step === 1) {
         if (this.mode === 'usuarios') {
@@ -283,14 +277,9 @@ export default {
         }
       }
 
-      // Emitir evento de guardado
       this.$emit('guardar', { ...this.form });
-
-      // 🔹 Cerrar el popup automáticamente tras guardar
       this.$emit('close');
-    },
-
-
+    }
   }
 }
 </script>
@@ -346,19 +335,17 @@ export default {
   padding-right: 6px;
   margin-bottom: 10px;
 }
-/* Botón Aceptar más pequeño en modo edición de accesos */
 
+/* Botón Aceptar más pequeño */
 .small-btn {
   margin-right: 10px;
   min-width: 110px;
 }
 
-
-/* Botones fijos */
 /* Botones fijos */
 .actions {
   display: flex;
-  justify-content: flex-end; /* 🔹 ahora alinea el botón a la derecha */
+  justify-content: flex-end;
   padding: 10px;
   background: white;
   border-top: 1px solid #CCDBDC;
@@ -366,7 +353,7 @@ export default {
   bottom: 0;
 }
 .actions button {
-  flex: 0 0 auto; /* 🔹 no crecer ni ocupar todo el espacio */
+  flex: 0 0 auto;
   padding: 8px 22px;
   font-size: 15px;
   border: none;
@@ -389,8 +376,6 @@ input, select, textarea {
 
 /* Accesos */
 .titulo-accesos { font-weight: 700; color: #263D42; margin-bottom: 10px; }
-.modulo-group { margin-bottom: 10px; }
-.modulo-group h4 { margin-bottom: 6px; color: #263D42; font-weight: 700; }
 .modulo-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -431,5 +416,4 @@ input, select, textarea {
   color: #8E6C88;
   transform: scale(1.2);
 }
-
 </style>

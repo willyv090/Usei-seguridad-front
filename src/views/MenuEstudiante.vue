@@ -55,7 +55,7 @@
           <div class="card">
             <img src="@/components/images/soporte_icon.png" alt="Soporte/Ayuda" class="card-icon" />
           </div>
-          <h3>SOPORTE/AYUDA</h3>
+          <h3>CONTACTO SOPORTE</h3>
           <div class="card-button-container">
             <button class="btn-ingresar" @click="goToContactAdmin">Ingresar</button>
           </div>

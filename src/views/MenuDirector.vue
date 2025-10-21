@@ -35,7 +35,7 @@
           <div class="card">
             <img src="@/components/images/certificado_icon.png" alt="Certificados" class="card-icon" />
           </div>
-          <h3>CERTIFICADOS</h3>
+          <h3>CERTIFICADOS DE ESTUDIANTES</h3>
           <div class="card-button-container">
             <button class="btn-ingresar" @click="goToCertificado">Ingresar</button>
           </div>
@@ -45,7 +45,7 @@
           <div class="card">
             <img src="@/components/images/formulario_icon.png" alt="Encuesta de Graduación" class="card-icon" />
           </div>
-          <h3>ENCUESTA DE GRADUACIÓN</h3>
+          <h3> VER ENCUESTA DE GRADUACIÓN</h3>
           <div class="card-button-container">
             <button class="btn-ingresar" @click="goToVerPreguntas">Ingresar</button>
           </div>
@@ -55,7 +55,7 @@
           <div class="card">
             <img src="@/components/images/reportes.png" alt="Reportes" class="card-icon" />
           </div>
-          <h3>REPORTES</h3>
+          <h3>ABM REPORTES DE LA ENCUESTA</h3>
           <div class="card-button-container">
             <button class="btn-ingresar" @click="goToReportes">Ingresar</button>
           </div>
@@ -65,7 +65,7 @@
           <div class="card">
             <img src="@/components/images/soporte-director.png" alt="Reportes" class="card-icon" />
           </div>
-          <h3>SOPORTE</h3>
+          <h3>SOPORTE/AYUDA</h3>
           <div class="card-button-container">
             <button class="btn-ingresar" @click="goToSoporteDirector">Ingresar</button>
           </div>

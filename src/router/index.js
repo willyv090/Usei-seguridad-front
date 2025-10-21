@@ -67,158 +67,158 @@ const router = createRouter({
       path:'/encuesta-estudiante',
       name: 'encuestaEstudiante',
       component: EncuestaEstudiante,
-      meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
     },
     {
       path: '/resumen', 
       name: 'ResumePage',
       component: ResumePage,
-      meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
     },
     {
       path: '/gestion-directores', 
       name: 'GestionDirectores',
       component: GestionDirectores,
-      meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
     },
     {
       path: '/enviar-encuesta', 
       name: 'EnviarEncuesta',
       component: EnviarEncuesta,
-      meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
     },
     {
       path: '/en-progreso', // Nueva ruta
       name: 'EnProgreso',
       component: EnProgreso,
-      meta: { requiresAuth: true } // Rutas protegidas
+      //meta: { requiresAuth: true } // Rutas protegidas
     },
     {
       path: '/editar-encuesta/:idEncuesta/preguntas', // Nueva ruta
       name: 'EditarEncuesta',
       component: EditarEncuesta,
-      meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
     },
     {
       path: '/listado-estudiantes', // Nueva ruta
       name: 'ListadoEstudiantes',
       component: ListadoEstudiantes,
-      meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
     },
     {
       path: '/preguntas/:idPregunta/opciones',
       name: 'GestionOpcionesPregunta',
       component: GestionOpcionesPregunta,
-      meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
     },
     {
       path: '/noticia-form',
       name: 'NoticiaForm',
       component: NoticiaForm,
-      meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
     },
     {
       path: '/gestion-encuestas/:idUsuario',
       name: 'GestionEncuestas',
       component: GestionEncuestas,
-      meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
     },
     {
       path: '/contacto-admin',
       name: 'ContactoAdmin',
       component: ContactoAdmin,
-      meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
     },
     {
       path: '/formulario-soporte',
       name: 'FormularioSoporte',
       component: FormularioSoporte,
-      meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
     },
     {
       path: '/formulario-plazos', 
       name: 'FormularioPlazos',
       component: FormularioPlazos, // Usa el nuevo componente
-      meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
     },
     {
       path: '/respuestas-estudiante/:idEstudiante',
       name: 'RespuestasEstudiante',
       component: RespuestasEstudiante,
-      meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
     },
     {
       path: '/vista-respuestas/:idEstudiante', 
       name: 'VerRespuestas',
       component: VerRespuestas, // Componente que muestra las respuestas
-      meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
     },
     {
       path: '/subir-certificado',
       name: 'subir-certificado',
       component: subirCertificado,
-      meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
     },
     {
       path: '/estudiantes-registrados',
       name: 'EstudiantesRegistrados',
       component: EstudiantesRegistrados,
-      meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
     },
     
     {
       path: '/porcentaje-incompleto',
       name: 'PorcentajeIncompleto',
       component: PorcentajeIncompleto,
-      meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
     },
     {
       path: '/certificado-estudiante',
       name: 'certificado-estudiante',
       component: CertificadoEstudiante,
-      meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
     },
     {
       path: '/dashboard',
       name: 'dashboard',
       component: Dashboard,
-      meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
     },
     {
       path: '/reporte-dash', // Nueva ruta para ReporteDash
       name: 'ReporteDash',
       component: ReporteDash,
-      meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
     },
     {
       path: '/acceso-denegado',
       name: 'AccesoDenegado',
-      component: AccesoDenegado // Componente que muestra un mensaje de acceso denegado
+      //component: AccesoDenegado // Componente que muestra un mensaje de acceso denegado
     },  
     {
       path: '/soporte-director',
       name: 'SoporteDirector',
       component: SoporteDirector,
-      meta: { requiresAuth: true, roles: ['Director'] }
+      //meta: { requiresAuth: true, roles: ['Director'] }
     },
     {
       path: '/lista-preguntas',
       name: 'ListaPreguntas',
       component: VerPreguntas,
-      meta: { requiresAuth: true, roles: ['Administrador', 'Director']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador', 'Director']  } // Rutas protegidas
     }, 
 
     {
       path: '/historial-reportes',
       name: 'HistorialReportes',
       component: HistorialReportes,
-      meta: { requiresAuth: true, roles: ['Administrador', 'Director']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador', 'Director']  } // Rutas protegidas
     },
     {
       path: '/crear-reporte-director',
       name: 'CrearReporteDirector',
       component: CrearReporteDirector,
-      meta: { requiresAuth: true, roles: ['Administrador', 'Director']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador', 'Director']  } // Rutas protegidas
     },
     {
       path: '/estado-estudiante',
