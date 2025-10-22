@@ -84,7 +84,7 @@ export default {
       }
 
       try {
-        const response = await this.$publicAxios.post(`${BASE_URL}/usuario/login`, {
+        const response = await this.$publicAxios.post(`${BASE_URL}/auth/login`, {
           correo: this.correo,
           contrasena: this.password,
         });
@@ -109,6 +109,11 @@ export default {
           localStorage.setItem('nombre', data.nombre);
           localStorage.setItem('rol', data.rol);
           localStorage.setItem('cambio_contrasenia', data.cambio_contrasenia);
+          const accesos = data.accesos || response.data.accesos || [];
+          localStorage.setItem('accesos', JSON.stringify(accesos));
+          console.log('Accesos guardados:', accesos);
+
+
 
           if (data.carrera) {
             localStorage.setItem('carrera', data.carrera);
@@ -119,24 +124,14 @@ export default {
 
           // Usar SweetAlert para mostrar éxito
           Swal.fire({
-            icon: 'success',
-            title: 'Inicio de sesión correcto',
-            text: `Bienvenido/a, ${data.nombre}`,
-            confirmButtonText: 'Continuar',
-          }).then(() => {
-            // Redirigir al usuario dependiendo del rol después de confirmar
-            if (data.rol === 'admin') {
-              this.$router.push({ name: 'menuAdministrador' });
-            } else if (data.rol === 'director') {
-              this.$router.push({ name: 'menuDirector' });
-            } else if (data.rol === 'estudiante') {
-              this.$router.push({ name: 'menuEstudiante' });
-            } else if (data.rol === 'seguridad') {
-              this.$router.push({ name: 'menuSeguridad' });
-            } else {
-              this.$router.push({ name: 'menuEstudiante' });
-            }
-          });
+          icon: 'success',
+          title: 'Inicio de sesión correcto',
+          text: `Bienvenido/a, ${data.nombre}`,
+          confirmButtonText: 'Continuar',
+        }).then(() => {
+          this.$router.push({ name: 'menuUsuario' }); // Redirige a vista unificada
+        });
+
         }
       } catch (error) {
         // Manejar respuesta no exitosa

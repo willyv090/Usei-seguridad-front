@@ -45,6 +45,13 @@ const router = createRouter({
       name: 'inicio',
       component: PaginaInicio
     },
+      {
+      path: '/menu-usuario',
+      name: 'menuUsuario',
+      component: () => import('@/views/MenuUsuario.vue'),
+      meta: { requiresAuth: true }
+    },
+
     {
       path: '/menu-estudiante',
       name: 'menuEstudiante',
