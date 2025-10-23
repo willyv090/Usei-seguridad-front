@@ -1076,7 +1076,7 @@ td.center .action-btn {
 }
 
 ::v-deep(.role-administrador) {
-  background-color: #8E6C88 !important; /* violeta oscuro */
+  background-color: #a5809e !important; /* violeta oscuro */
   color: white !important;
 }
 
@@ -1085,9 +1085,8 @@ td.center .action-btn {
   color: white !important;
 }
 
-/* 🔹 Color por defecto — se aplica solo si no coincide con los anteriores */
 ::v-deep(.badge[class*="role-"]:not(.role-estudiante):not(.role-administrador):not(.role-director):not(.role-seguridad)) {
-  background-color: #b361b6 !important; /* violeta suave */
+  background-color: #d196d3 !important; 
   color: white !important;
 }
 
@@ -1163,27 +1162,27 @@ td.center .action-btn {
   height: 50px;
   border-radius: 50%;
   animation: wave 1.5s ease-in-out infinite;
-  background-color: #37bf57;
+  background-color: #6eca84;
 }
 
 .ball:nth-child(2) {
   animation-delay: -0.2s;
-  background-color: #49caa1;
+  background-color: #7ed1b7;
 }
 
 .ball:nth-child(3) {
   animation-delay: -0.4s;
-  background-color: #12aab4;
+  background-color: #75c6cc;
 }
 
 .ball:nth-child(4) {
   animation-delay: -0.6s;
-  background-color: #2c88c1;
+  background-color: #65a9d3;
 }
 
 .ball:nth-child(5) {
   animation-delay: -0.8s;
-  background-color: #6b45b1;
+  background-color: #8e72c0;
 }
 
 @keyframes wave {

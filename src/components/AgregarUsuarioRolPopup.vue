@@ -48,8 +48,19 @@
             <template v-else>
               <div class="form-group">
                 <label for="nombreRol">Nombre del rol</label>
-                <input id="nombreRol" v-model="form.nombreRol" type="text" required />
+                <input
+                  id="nombreRol"
+                  v-model="form.nombreRol"
+                  type="text"
+                  required
+                  @input="normalizarNombreRol"
+                  @blur="verificarAbreviacion"
+                />
+                <small v-if="tooltipMensaje" class="tooltip-warning">
+                  {{ tooltipMensaje }}
+                </small>
               </div>
+
               <div class="form-group">
                 <label for="activo">Activo</label>
                 <select id="activo" v-model="form.activo">
@@ -88,7 +99,7 @@
               </div>
             </template>
 
-            <!-- 🔹 Si es modo roles -->
+            <!-- Modo roles -->
             <template v-else>
               <div class="form-group">
                 <label class="titulo-accesos">Accesos (módulos disponibles)</label>
@@ -164,29 +175,27 @@ export default {
   },
 
   data() {
-    return {
-      step: 1,
-      showPassword: false,
-
-      // 🔹 Formulario base (depende del modo)
-      form: this.mode === 'usuarios'
-        ? {
-            ci: '',
-            nombre: '',
-            apellido: '',
-            correo: '',
-            telefono: '',
-            carrera: '',
-            idRol: ''
-          }
-        : {
-            idRol: null,
-            nombreRol: '',
-            activo: true,
-            accesos: []
-          },
-
-      // ✅ Listado plano de módulos
+  return {
+    step: 1,
+    showPassword: false,
+    tooltipMensaje: "", // ⚠️ texto del tooltip dinámico
+    form: this.mode === 'usuarios'
+      ? {
+          ci: '',
+          nombre: '',
+          apellido: '',
+          correo: '',
+          telefono: '',
+          carrera: '',
+          idRol: ''
+        }
+      : {
+          idRol: null,
+          nombreRol: '',
+          activo: true,
+          accesos: []
+        },
+      // Lista de todos los modulos disponibles del sistema
       modulosDisponibles: [
         'Encuesta de Graduación',
         'Certificados',
@@ -268,18 +277,51 @@ export default {
       }
       this.step = num;
     },
+    normalizarNombreRol() {
+      if (!this.form.nombreRol) return;
+      // Primera mayúscula, resto minúsculas
+      this.form.nombreRol = this.form.nombreRol
+        .replace(/\s+/g, ' ')
+        .trim()
+        .charAt(0)
+        .toUpperCase() + this.form.nombreRol.slice(1).toLowerCase();
+      this.tooltipMensaje = "";
+  },
+    verificarAbreviacion() {
+        const texto = this.form.nombreRol.trim().toLowerCase();
+        const abreviaciones = ['admin', 'adm', 'dir', 'est', 'pas', 'sec'];
+        if (abreviaciones.includes(texto)) {
+          this.tooltipMensaje = "⚠️ Usa el nombre completo (por ejemplo, 'Administrador', 'Director', 'Pasantia 2').";
+        } else {
+          this.tooltipMensaje = "";
+        }
+      },
 
     submitForm() {
-      if (this.mode === 'usuarios') {
-        const required = ['ci', 'nombre', 'apellido', 'correo', 'idRol'];
-        if (required.some(k => !String(this.form[k] || '').trim())) {
-          return swal.fire({ icon: 'warning', title: 'Completa todos los obligatorios.' });
-        }
-      }
+        if (this.mode === 'usuarios') {
+          const required = ['ci', 'nombre', 'apellido', 'correo', 'idRol'];
+          if (required.some(k => !String(this.form[k] || '').trim())) {
+            return swal.fire({ icon: 'warning', title: 'Completa todos los obligatorios.' });
+          }
+        } else if (this.mode === 'roles') {
+          if (!this.form.nombreRol || !this.form.nombreRol.trim()) {
+            return swal.fire({ icon: 'warning', title: 'El nombre del rol es obligatorio.' });
+          }
 
-      this.$emit('guardar', { ...this.form });
-      this.$emit('close');
-    }
+          this.verificarAbreviacion();
+          if (this.tooltipMensaje) {
+            return swal.fire({
+              icon: 'warning',
+              title: 'Nombre de rol no válido',
+              text: this.tooltipMensaje
+            });
+          }
+        }
+
+        this.$emit('guardar', { ...this.form });
+        this.$emit('close');
+      },
+
   }
 }
 </script>
@@ -416,4 +458,16 @@ input, select, textarea {
   color: #8E6C88;
   transform: scale(1.2);
 }
+
+.tooltip-warning {
+  display: inline-block;
+  color: #b94a48;
+  background: #f2dede;
+  border: 1px solid #ebccd1;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
 </style>
