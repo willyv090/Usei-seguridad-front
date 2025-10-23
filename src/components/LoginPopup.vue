@@ -5,8 +5,8 @@
       <h2>Iniciar sesión</h2>
       <form @submit.prevent="handleSubmit">
         <div class="form-group">
-          <label for="ci">CI</label>
-          <input type="text" id="ci" v-model="ci" required>
+          <label for="correo">Correo</label>
+          <input type="email" id="correo" v-model="correo" required>
         </div>
         <div class="form-group">
           <label for="password">Contraseña</label>
@@ -32,14 +32,18 @@
         <!-- Mostrar mensaje de error si falta algún campo -->
         <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
+        <!-- Contenedor para el CAPTCHA -->
+        <div class="form-group captcha-container">
+          <div id="captcha-element" class="captcha-wrapper">
+            <!-- El captcha se renderizará aquí -->
+          </div>
+        </div>
+
         <div class="form-group">
           <a href="#" @click.prevent="$emit('switch-to-code-verification')">Olvidé mi contraseña</a>
         </div>
         <button type="submit" class="submit-btn">Ingresar</button>
       </form>
-
-      <!-- Botón para Admin/Director -->
-      <button class="role-btn" @click="$emit('switch-to-admin-login')">Admin / Director</button>
 
     </div>
   </div>
@@ -54,10 +58,9 @@ export default {
   name: 'LoginPopup',
   data() {
     return {
-      ci: '',       // CI para el inicio de sesión
+      correo: '',    // Correo para el inicio de sesión
       password: '',  // Contraseña
-      role: 'estudiante',  // Rol predeterminado
-      errorMessage: '',  // Nueva variable para el mensaje de error
+      errorMessage: '',  // Variable para el mensaje de error
       showPassword: false // Controla la visibilidad de la contraseña
     };
   },
@@ -68,7 +71,7 @@ export default {
   methods: {
     async handleSubmit() {
       // Validar que ambos campos estén llenos
-      if (!this.ci || !this.password) {
+      if (!this.correo || !this.password) {
         this.errorMessage = ''; // Reiniciar el mensaje de error
         // Usar SweetAlert para mostrar el mensaje
         Swal.fire({
@@ -81,10 +84,9 @@ export default {
       }
 
       try {
-        const response = await this.$publicAxios.post(`${BASE_URL}/estudiante/login`, {
-          ci: this.ci,
+        const response = await this.$publicAxios.post(`${BASE_URL}/auth/login`, {
+          correo: this.correo,
           contrasena: this.password,
-          role: this.role,  // Enviar también el rol seleccionado
         });
         
         console.log('Respuesta del servidor:', response.data);
@@ -93,7 +95,7 @@ export default {
         if (response.data.status === "200 OK") {
           const { token, expiresIn, data } = response.data;
           console.log('Inicio de sesión correcto');
-          console.log('ID del estudiante:', data.id_estudiante);
+          console.log('ID del usuario:', data.id_usuario);
 
           // Guardar el token en localStorage
           localStorage.setItem('authToken', token);
@@ -101,37 +103,35 @@ export default {
           console.log(expiresIn);
 
           // Guardar otros datos en localStorage
-          localStorage.setItem('id_estudiante', data.id_estudiante);
+          localStorage.setItem('id_usuario', data.id_usuario);
           localStorage.setItem('ci', data.ci);
-          localStorage.setItem('correoInstitucional', data.correoInstitucional);
+          localStorage.setItem('correo', data.correo);
           localStorage.setItem('nombre', data.nombre);
-          localStorage.setItem('apellido', data.apellido);
           localStorage.setItem('rol', data.rol);
-          localStorage.setItem('telefono', data.telefono);
+          localStorage.setItem('cambio_contrasenia', data.cambio_contrasenia);
+          const accesos = data.accesos || response.data.accesos || [];
+          localStorage.setItem('accesos', JSON.stringify(accesos));
+          console.log('Accesos guardados:', accesos);
+
+
 
           if (data.carrera) {
-  localStorage.setItem('carrera', data.carrera);
-  console.log('Carrera guardada correctamente:', data.carrera); // Log adicional
-} else {
-  console.warn('El backend no proporcionó la carrera del usuario.');
-}
+            localStorage.setItem('carrera', data.carrera);
+            console.log('Carrera guardada correctamente:', data.carrera);
+          } else {
+            console.warn('El backend no proporcionó la carrera del usuario.');
+          }
 
           // Usar SweetAlert para mostrar éxito
           Swal.fire({
-            icon: 'success',
-            title: 'Inicio de sesión correcto',
-            text: `Bienvenido/a, ${data.nombre}`,
-            confirmButtonText: 'Continuar',
-          }).then(() => {
-            // Redirigir al usuario dependiendo del rol después de confirmar
-            if (data.rol === 'admin') {
-              this.$router.push({ name: 'menuAdministrador' });
-            } else if (data.rol === 'director') {
-              this.$router.push({ name: 'menuDirector' });
-            } else {
-              this.$router.push({ name: 'menuEstudiante' });
-            }
-          });
+          icon: 'success',
+          title: 'Inicio de sesión correcto',
+          text: `Bienvenido/a, ${data.nombre}`,
+          confirmButtonText: 'Continuar',
+        }).then(() => {
+          this.$router.push({ name: 'menuUsuario' }); // Redirige a vista unificada
+        });
+
         }
       } catch (error) {
         // Manejar respuesta no exitosa
@@ -160,23 +160,6 @@ export default {
         icon: 'info',
         title: 'Recuperar contraseña',
         text: 'Para recuperar tu contraseña, contacta a soporte.',
-        confirmButtonText: 'Aceptar',
-      });
-
-    },
-    selectRole() {
-      // Implementar la lógica para alternar el rol
-      if (this.role === 'estudiante') {
-        this.role = 'admin';
-      } else if (this.role === 'admin') {
-        this.role = 'director';
-      } else {
-        this.role = 'estudiante';
-      }
-      Swal.fire({
-        icon: 'info',
-        title: 'Rol seleccionado',
-        text: `Rol seleccionado: ${this.role}`,
         confirmButtonText: 'Aceptar',
       });
     },
@@ -332,6 +315,36 @@ export default {
 }
 .toggle-password-btn:hover {
   opacity: 0.7;
+}
+
+/* Estilos para el contenedor del CAPTCHA */
+.captcha-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px 0;
+  min-height: 78px;
+}
+
+.captcha-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Ajustes responsive para el captcha */
+@media (max-width: 400px) {
+  .popup-content {
+    width: 300px;
+  }
+  
+  .captcha-container {
+    transform: scale(0.9);
+    transform-origin: center;
+  }
 }
 
 </style>
