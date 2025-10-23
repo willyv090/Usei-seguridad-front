@@ -197,14 +197,79 @@ export default {
           return;
         }
         // Manejar respuesta no exitosa
+        console.log('Login error:', error.response);
+        
+        // Handle policy update required (426 Upgrade Required)
+        if (error.response && error.response.status === 426) {
+          const resp = error.response.data || {};
+          console.log('Policy update required:', resp);
+          
+          Swal.fire({
+            icon: 'warning',
+            title: 'Políticas de Seguridad Actualizadas',
+            text: 'Las políticas de seguridad han sido actualizadas. Debe cambiar su contraseña para cumplir con los nuevos requisitos.',
+            confirmButtonText: 'Cambiar Contraseña',
+            allowOutsideClick: false,
+            allowEscapeKey: false
+          }).then((result) => {
+            if (result.isConfirmed) {
+              // Store policy data temporarily including email for automatic login
+              const policyData = {
+                userId: resp.idUsuario || localStorage.getItem('idUsuarioCorreo'),
+                email: this.correo, // Store original email for automatic login
+                reason: 'policy-updated',
+                timestamp: Date.now()
+              };
+              localStorage.setItem('policyPasswordChange', JSON.stringify(policyData));
+              
+              // Close the LoginPopup and open ChangePasswordPopup
+              this.$emit('close');
+              this.$emit('switch-to-change-password');
+            }
+          });
+          return;
+        }
+        
         if (error.response && error.response.data.status === "401 Unauthorized") {
           // Usar SweetAlert para mostrar error de credenciales incorrectas
-          Swal.fire({
-            icon: 'error',
-            title: 'Credenciales incorrectas',
-            text: error.response.data.error || 'Por favor, verifique sus credenciales.',
-            confirmButtonText: 'Aceptar',
-          });
+          // Look for server-provided attempt info
+          const resp = error.response && error.response.data ? error.response.data : {};
+          const attemptsLeft = resp.attemptsLeft || resp.remainingAttempts || resp.attemptsRemaining;
+          const recoveryRequired = resp.recoveryRequired || resp.locked || resp.accountLocked;
+
+          if (attemptsLeft !== undefined) {
+            // Show remaining attempts
+            Swal.fire({
+              icon: 'error',
+              title: 'Credenciales incorrectas',
+              text: `${resp.error || 'Por favor, verifique sus credenciales.'} Intentos restantes: ${attemptsLeft}`,
+              confirmButtonText: 'Aceptar',
+            }).then(() => {
+              if (attemptsLeft <= 0 || recoveryRequired) {
+                // After attempts exhausted, send the user to the password recovery flow
+                // The parent listens for `switch-to-code-verification` to show recovery UI
+                this.$emit('switch-to-code-verification');
+              }
+            });
+          } else if (recoveryRequired) {
+            // backend explicitly requests recovery
+            Swal.fire({
+              icon: 'warning',
+              title: 'Acceso bloqueado',
+              text: resp.error || 'Tu cuenta requiere recuperación de contraseña.',
+              confirmButtonText: 'Proceder',
+            }).then(() => {
+              this.$emit('switch-to-code-verification');
+            });
+          } else {
+            // Fallback: generic message if server didn't supply attempts info
+            Swal.fire({
+              icon: 'error',
+              title: 'Credenciales incorrectas',
+              text: resp.error || 'Por favor, verifique sus credenciales.',
+              confirmButtonText: 'Aceptar',
+            });
+          }
         } else {
           // Usar SweetAlert para otros errores
           Swal.fire({

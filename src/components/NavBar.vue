@@ -111,7 +111,7 @@
       @close="showLoginPopup = false" 
       @switch-to-register="switchToRegister" 
       @switch-to-admin-login="switchToAdminLogin" 
-      @switch-to-change-password="switchToChangePassword"
+      @switch-to-change-password="handlePolicyPasswordChange"
       @switch-to-code-verification="switchToCodeVerification"
     />
     <AdminLoginPopup 
@@ -123,7 +123,10 @@
     />
     <ChangePasswordPopup 
       v-if="showChangePasswordPopup" 
-      @close=" showChangePasswordPopup= false"
+      :isFromPolicyUpdate="policyPasswordChange"
+      :reason="policyPasswordChange ? 'policy-updated' : ''"
+      @close="closeChangePassword"
+      @login-success="handleAutoLoginSuccess"
       @switch-to-change-password="switchToChangePassword"
       @switch-to-student-login="switchToStudentLogin" 
     />
@@ -144,6 +147,7 @@ import AdminLoginPopup from '@/components/AdminLoginPopup.vue';
 import ChangePasswordPopup from '@/components/ChangePasswordPopup.vue';
 import CodeVerificationPopup from './CodeVerificationPopup.vue';
 import { BASE_URL } from '@/config/globals';
+import { getBackendUrl } from '@/utils/backendDiscovery';
 
 export default {
   name: 'NavBar',
@@ -169,6 +173,7 @@ export default {
       showNotifications: false,
       showChangePasswordPopup: false,
       showCodeVerificationPopup: false,
+      policyPasswordChange: false,
       username: '',
       role: '',
       notifications: [],
@@ -307,8 +312,19 @@ export default {
     },
     async loadNotifications(page = this.currentPage) {
       const estudianteId = this.estudianteId; // Usar la variable estudianteId ya asignada
+      // Skip loading notifications if we don't have an estudianteId or token (prevents unauthorized errors during trial)
+      const token = localStorage.getItem('authToken');
+      if (!token || !estudianteId) {
+        // Nothing to load; clear notifications and return
+        this.notifications = [];
+        return;
+      }
+
       try {
-        const response = await this.$protectedAxios.get(`${BASE_URL}/notificacion/estudiante/${estudianteId}`, {
+        const backend = await getBackendUrl();
+        if (!backend) return;
+
+        const response = await this.$protectedAxios.get(`${backend}/notificacion/estudiante/${estudianteId}`, {
           params: {
             page: page,
             size: this.pageSize
@@ -372,6 +388,33 @@ export default {
       } else if (this.userRole === 'Administrador') {
         this.$router.push('/formulario-soporte'); // Para administradores redirigir a formularioSoporte
       }
+    },
+    handlePolicyPasswordChange() {
+      // Close LoginPopup and open ChangePasswordPopup for policy update
+      this.showLoginPopup = false;
+      this.policyPasswordChange = true;
+      this.showChangePasswordPopup = true;
+    },
+    closeChangePassword() {
+      this.showChangePasswordPopup = false;
+      this.policyPasswordChange = false;
+      // Clear temporary policy data
+      localStorage.removeItem('policyPasswordChange');
+    },
+    handleAutoLoginSuccess(userData) {
+      // Close all popups
+      this.showChangePasswordPopup = false;
+      this.showLoginPopup = false;
+      this.policyPasswordChange = false;
+      
+      // Update NavBar with user data
+      this.username = userData.username || userData.email;
+      this.role = userData.role;
+      
+      // Emit event to parent components if needed
+      this.$emit('user-logged-in', userData);
+      
+      console.log('User automatically logged in after password update:', userData);
     }
   },
 };
