@@ -39,10 +39,20 @@
                 <input id="apellido" v-model="form.apellido" type="text" required />
               </div>
 
-              <div class="form-group">
+              <div class="form-group correo-group">
                 <label for="correo">Correo</label>
-                <input id="correo" v-model="form.correo" type="email" required />
+                <input
+                  id="correo"
+                  v-model="form.correo"
+                  type="email"
+                  required
+                  :class="{ 'input-error': correoInvalido }"
+                />
+                <small v-if="correoInvalido" class="tooltip-error">
+                  Ingresa un correo válido (ejemplo: nombre.apellido@ucb.edu.bo)
+                </small>
               </div>
+
             </template>
 
             <template v-else>
@@ -176,6 +186,7 @@ export default {
 
   data() {
   return {
+    correoInvalido: false,
     step: 1,
     showPassword: false,
     tooltipMensaje: "", // ⚠️ texto del tooltip dinámico
@@ -255,6 +266,12 @@ export default {
   },
 
   methods: {
+    watch: {
+      'form.correo'(nuevo) {
+        const emailRegex = /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/;
+        this.correoInvalido = nuevo.trim() !== '' && !emailRegex.test(nuevo.trim());
+      }
+    },
     toggleAcceso(mod) {
       if (this.form.accesos.includes(mod)) {
         this.form.accesos = this.form.accesos.filter(a => a !== mod);
@@ -269,6 +286,15 @@ export default {
           if (!this.form.ci || !this.form.nombre || !this.form.apellido || !this.form.correo) {
             return swal.fire({ icon: 'warning', title: 'Completa los campos del paso 1.' });
           }
+          const emailRegex = /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(this.form.correo.trim())) {
+              this.correoInvalido = true;
+              return swal.fire({
+                icon: 'warning',
+                title: 'Correo inválido',
+                text: 'Por favor ingresa un correo con formato válido (usuario@ucb.edu.bo).'
+              });
+            }
         } else if (this.mode === 'roles') {
           if (!this.form.nombreRol || !this.form.nombreRol.trim()) {
             return swal.fire({ icon: 'warning', title: 'El nombre del rol es obligatorio.' });
@@ -468,6 +494,25 @@ input, select, textarea {
   border-radius: 6px;
   font-size: 12px;
   margin-top: 4px;
+}
+.input-error {
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 5px rgba(231, 76, 60, 0.6);
+}
+
+.tooltip-error {
+  display: inline-block;
+  color: #a94442;
+  background: #f2dede;
+  border: 1px solid #ebccd1;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.correo-group {
+  position: relative;
 }
 
 </style>

@@ -817,68 +817,74 @@ export default {
   },
 
   async guardarCambios() {
-  try {
-    const cambios = this.rows.filter((item, i) => {
-      const original = this.backupRows[i];
-      return JSON.stringify(item) !== JSON.stringify(original);
-    });
+    try {
+      const cambios = this.rows.filter((item, i) => {
+        const original = this.backupRows[i];
+        return JSON.stringify(item) !== JSON.stringify(original);
+      });
 
-    if (!cambios.length) {
-      Swal.fire('Sin cambios', 'No hay modificaciones para guardar.', 'info');
-      this.editMode = false;
-      return;
-    }
-
-    for (const item of cambios) {
-      if (this.currentTab === 'usuarios') {
-        const rolSel = this.allRoles.find(r => r.nombreRol === item.rol);
-        const body = {};
-        if (item.ci) body.ci = item.ci;
-        if (item.nombre) body.nombre = item.nombre;
-        if (item.apellido) body.apellido = item.apellido;
-        if (item.correo) body.correo = item.correo;
-        if (item.telefono) body.telefono = item.telefono;
-        if (item.carrera) body.carrera = item.carrera;
-        if (rolSel) body.idRol = rolSel.idRol;
-
-        await axios.patch(`${BASE_URL}/usuario/${item.idUsuario}`, body, {
-          headers: { 'Content-Type': 'application/json' }
-        });
-      } else {
-        const body = {
-          nombreRol: item.nombreRol,
-          activo: item.activo,
-          accesos: Array.isArray(item.accesos)
-            ? item.accesos.join(',')
-            : item.accesos || ''
-        };
-
-        await axios.put(`${this.ROLE_MUTATION_BASE}/${item.idRol}`, body, {
-          headers: { 'Content-Type': 'application/json' }
-        });
+      if (!cambios.length) {
+        Swal.fire('Sin cambios', 'No hay modificaciones para guardar.', 'info');
+        this.editMode = false;
+        return;
       }
+
+      const emailRegex = /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/;
+
+      for (const item of cambios) {
+        if (this.currentTab === 'usuarios') {
+          // ⚠️ Validar correo
+          if (!emailRegex.test(item.correo.trim())) {
+            await Swal.fire({
+              icon: 'warning',
+              title: 'Correo inválido',
+              text: `El correo "${item.correo}" no tiene un formato válido (ejemplo: usuario@ucb.edu.bo).`
+            });
+            return;
+          }
+
+          const rolSel = this.allRoles.find(r => r.nombreRol === item.rol);
+          const body = {};
+          if (item.ci) body.ci = item.ci;
+          if (item.nombre) body.nombre = item.nombre;
+          if (item.apellido) body.apellido = item.apellido;
+          if (item.correo) body.correo = item.correo;
+          if (item.telefono) body.telefono = item.telefono;
+          if (item.carrera) body.carrera = item.carrera;
+          if (rolSel) body.idRol = rolSel.idRol;
+
+          await axios.patch(`${BASE_URL}/usuario/${item.idUsuario}`, body, {
+            headers: { 'Content-Type': 'application/json' }
+          });
+        } else {
+          const body = {
+            nombreRol: item.nombreRol,
+            activo: item.activo,
+            accesos: Array.isArray(item.accesos)
+              ? item.accesos.join(',')
+              : item.accesos || ''
+          };
+
+          await axios.put(`${this.ROLE_MUTATION_BASE}/${item.idRol}`, body, {
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Cambios guardados correctamente',
+        timer: 1200,
+        showConfirmButton: false,
+      }).then(() => {
+        localStorage.setItem('lastTab', this.currentTab);
+        window.location.reload();
+      });
+    } catch (err) {
+      console.error('❌ Error al guardar cambios:', err);
+      Swal.fire('Error', 'No se pudieron guardar los cambios.', 'error');
     }
-
-    // 🔹 Mostrar confirmación y luego refrescar la página completa
-    Swal.fire({
-      icon: 'success',
-      title: 'Cambios guardados correctamente',
-      timer: 1200,
-      showConfirmButton: false,
-    }).then(() => {
-      // 🔹 Guardar la pestaña actual antes de refrescar
-      localStorage.setItem('lastTab', this.currentTab);
-
-      // 🔄 Refrescar la página completa
-      window.location.reload();
-    });
-  } catch (err) {
-    console.error('❌ Error al guardar cambios:', err);
-    Swal.fire('Error', 'No se pudieron guardar los cambios.', 'error');
-  }
-},
-
-
+  },
 
     handlePageClick(page) {
       this.fetchData(page);
