@@ -44,7 +44,7 @@ export const MENU_CARDS = {
     id: "seguimiento-estudiantes",
     title: "Seguimiento de estudiantes",
     description: "Monitorea el progreso de encuestas completadas.",
-    icon: new URL("@/components/images/progreso.jpg", import.meta.url).href,
+    icon: new URL("@/components/images/certificado_icon.png", import.meta.url).href,
     route: "/enviar-encuesta",
     accessKey: "Seguimiento de estudiantes",
   },
