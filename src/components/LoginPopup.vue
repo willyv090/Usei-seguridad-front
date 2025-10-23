@@ -29,14 +29,10 @@
           </div>
         </div>
 
-        <!-- Mostrar mensaje de error si falta algún campo -->
         <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
-        <!-- Contenedor para el CAPTCHA -->
         <div class="form-group captcha-container">
-          <div id="captcha-element" class="captcha-wrapper">
-            <!-- El captcha se renderizará aquí -->
-          </div>
+          <div id="captcha-element" class="captcha-wrapper"></div>
         </div>
 
         <div class="form-group">
@@ -61,19 +57,59 @@ export default {
       correo: '',    // Correo para el inicio de sesión
       password: '',  // Contraseña
       errorMessage: '',  // Variable para el mensaje de error
-      showPassword: false // Controla la visibilidad de la contraseña
+      showPassword: false, // Controla la visibilidad de la contraseña
+      captchaToken: '', 
     };
   },
   setup() {
     const router = useRouter(); // Para utilizar el enrutador de Vue
     return { router };
   },
+  mounted() {
+    // Cargar dinámicamente el script de Google reCAPTCHA
+    const scriptId = 'recaptcha-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => this.renderCaptcha();
+      document.head.appendChild(script);
+    } else {
+      this.renderCaptcha();
+    }
+  },
   methods: {
+    // Renderizar el CAPTCHA
+    renderCaptcha() {
+      if (window.grecaptcha) {
+        window.grecaptcha.ready(() => {
+          window.grecaptcha.render('captcha-element', {
+            sitekey: '6LfqqPMrAAAAADBBWCoAgKzGxnSy-TZ7vkFm87uR', // tu clave pública
+            callback: this.onCaptchaSuccess,
+            'expired-callback': this.onCaptchaExpired,
+          });
+        });
+      }
+    },
+
+    //  Al completar el captcha
+    onCaptchaSuccess(token) {
+      this.captchaToken = token;
+      console.log(' CAPTCHA completado:', token);
+    },
+
+    // Si expira el captcha
+    onCaptchaExpired() {
+      this.captchaToken = '';
+      console.warn('⚠️ CAPTCHA expirado, vuelve a verificar.');
+    },
+
     async handleSubmit() {
       // Validar que ambos campos estén llenos
       if (!this.correo || !this.password) {
         this.errorMessage = ''; // Reiniciar el mensaje de error
-        // Usar SweetAlert para mostrar el mensaje
         Swal.fire({
           icon: 'error',
           title: 'Campos incompletos',
@@ -83,26 +119,33 @@ export default {
         return; // No continuar con la solicitud
       }
 
+      // Validar que el CAPTCHA esté completo
+      if (!this.captchaToken) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Verificación requerida',
+          text: 'Por favor, confirma que no eres un robot.',
+          confirmButtonText: 'Aceptar',
+        });
+        return;
+      }
+
       try {
+        // Enviar el token del CAPTCHA al backend junto con las credenciales
         const response = await this.$publicAxios.post(`${BASE_URL}/auth/login`, {
           correo: this.correo,
           contrasena: this.password,
+          captchaToken: this.captchaToken, //  Enviar token al backend
         });
         
         console.log('Respuesta del servidor:', response.data);
 
-        // Manejar respuesta exitosa
         if (response.data.status === "200 OK") {
-          const { token, expiresIn, data } = response.data;
+          const { token, data } = response.data;
           console.log('Inicio de sesión correcto');
           console.log('ID del usuario:', data.id_usuario);
 
-          // Guardar el token en localStorage
           localStorage.setItem('authToken', token);
-
-          console.log(expiresIn);
-
-          // Guardar otros datos en localStorage
           localStorage.setItem('id_usuario', data.id_usuario);
           localStorage.setItem('ci', data.ci);
           localStorage.setItem('correo', data.correo);
@@ -113,8 +156,6 @@ export default {
           localStorage.setItem('accesos', JSON.stringify(accesos));
           console.log('Accesos guardados:', accesos);
 
-
-
           if (data.carrera) {
             localStorage.setItem('carrera', data.carrera);
             console.log('Carrera guardada correctamente:', data.carrera);
@@ -122,21 +163,29 @@ export default {
             console.warn('El backend no proporcionó la carrera del usuario.');
           }
 
-          // Usar SweetAlert para mostrar éxito
           Swal.fire({
-          icon: 'success',
-          title: 'Inicio de sesión correcto',
-          text: `Bienvenido/a, ${data.nombre}`,
-          confirmButtonText: 'Continuar',
-        }).then(() => {
-          this.$router.push({ name: 'menuUsuario' }); // Redirige a vista unificada
-        });
-
+            icon: 'success',
+            title: 'Inicio de sesión correcto',
+            text: `Bienvenido/a, ${data.nombre}`,
+            confirmButtonText: 'Continuar',
+          }).then(() => {
+            this.$router.push({ name: 'menuUsuario' });
+          });
         }
       } catch (error) {
-        // Manejar respuesta no exitosa
+        // Manejar errores
+        if (error.response && error.response.data.status === "403 Forbidden") {
+          Swal.fire({
+            icon: 'error',
+            title: 'Captcha inválido',
+            text: 'Por favor, vuelve a verificar que no eres un robot.',
+          });
+          if (window.grecaptcha) window.grecaptcha.reset();
+          this.captchaToken = '';
+          return;
+        }
+
         if (error.response && error.response.data.status === "401 Unauthorized") {
-          // Usar SweetAlert para mostrar error de credenciales incorrectas
           Swal.fire({
             icon: 'error',
             title: 'Credenciales incorrectas',
@@ -144,7 +193,6 @@ export default {
             confirmButtonText: 'Aceptar',
           });
         } else {
-          // Usar SweetAlert para otros errores
           Swal.fire({
             icon: 'error',
             title: 'Error en el inicio de sesión',
@@ -154,8 +202,8 @@ export default {
         }
       }
     },
+
     forgotPassword() {
-      // Implementar lógica de recuperación de contraseña
       Swal.fire({
         icon: 'info',
         title: 'Recuperar contraseña',
@@ -163,15 +211,13 @@ export default {
         confirmButtonText: 'Aceptar',
       });
     },
+
     goToEnProgreso(){
       this.$router.push('/en-progreso');
     }
   }
 };
 </script>
-
-
-
 
 <style scoped>
 .popup-overlay {
@@ -245,46 +291,11 @@ export default {
   color: white;
 }
 
-.register-btn {
-  width: 100%;
-  padding: 10px;
-  border: none;
-  border-radius: 15px;
-  cursor: pointer;
-  margin-top: 10px;
-  background-color: #CCDBDC;
-  color: #333;
-}
-
-.register-btn:hover {
-  background-color: #263D42;
-  color: white;
-}
-
 .error-message {
   color: red;
   margin-bottom: 10px;
 }
 
-/* Nuevo botón estilo */
-.role-btn {
-  width: 100%;
-  padding: 10px;
-  background-color: #63C7B2;  /* Mismo color que el botón de "Ingresar" */
-  color: white;
-  border: none;
-  border-radius: 15px;
-  cursor: pointer;
-  margin-top: 10px;
-  font-size: 17px;
-}
-
-.role-btn:hover {
-  background-color: #8E6C88;
-  color: white;
-}
-
-/* Estilos para el botón de mostrar/ocultar contraseña (igual que ChangePasswordPopup) */
 .password-input-container {
   position: relative;
   width: 100%;
@@ -317,7 +328,7 @@ export default {
   opacity: 0.7;
 }
 
-/* Estilos para el contenedor del CAPTCHA */
+/* CAPTCHA */
 .captcha-container {
   display: flex;
   justify-content: center;
@@ -335,18 +346,13 @@ export default {
   overflow: hidden;
 }
 
-/* Ajustes responsive para el captcha */
 @media (max-width: 400px) {
   .popup-content {
     width: 300px;
   }
-  
   .captcha-container {
     transform: scale(0.9);
     transform-origin: center;
   }
 }
-
 </style>
-
-

@@ -231,7 +231,7 @@ const router = createRouter({
       path: '/estado-estudiante',
       name: 'EstadoEstudiante',
       component: EstadoEstudiante,
-      meta: { requiresAuth: true, roles: ['Administrador', 'Director']  } // Rutas protegidas
+      //meta: { requiresAuth: true, roles: ['Administrador', 'Director']  } // Rutas protegidas
     },
     {
       path: '/menu-seguridad',
