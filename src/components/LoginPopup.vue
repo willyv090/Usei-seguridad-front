@@ -33,11 +33,9 @@
         <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
         <!-- Contenedor para el CAPTCHA -->
-        <div class="form-group captcha-container">
-          <div id="captcha-element" class="captcha-wrapper">
-            <!-- El captcha se renderizará aquí -->
-          </div>
-        </div>
+        <div id="captcha-element" class="captcha-wrapper"></div>
+
+
 
         <div class="form-group">
           <a href="#" @click.prevent="$emit('switch-to-code-verification')">Olvidé mi contraseña</a>
@@ -61,14 +59,57 @@ export default {
       correo: '',    // Correo para el inicio de sesión
       password: '',  // Contraseña
       errorMessage: '',  // Variable para el mensaje de error
-      showPassword: false // Controla la visibilidad de la contraseña
+      showPassword: false, // Controla la visibilidad de la contraseña
+      captchaToken: '', 
+
+
     };
   },
   setup() {
     const router = useRouter(); // Para utilizar el enrutador de Vue
     return { router };
   },
+  mounted() {
+    // Cargar dinámicamente el script de Google reCAPTCHA
+    const scriptId = 'recaptcha-script';
+    if (!document.getElementById(scriptId)) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => this.renderCaptcha();
+      document.head.appendChild(script);
+    } else {
+      this.renderCaptcha();
+    }
+  },
   methods: {
+    // Renderizar el CAPTCHA
+    renderCaptcha() {
+      if (window.grecaptcha) {
+        window.grecaptcha.ready(() => {
+          window.grecaptcha.render('captcha-element', {
+            sitekey: '6LfqqPMrAAAAADBBWCoAgKzGxnSy-TZ7vkFm87uR', // tu clave pública
+            callback: this.onCaptchaSuccess,
+            'expired-callback': this.onCaptchaExpired,
+          });
+        });
+      }
+    },
+
+    //  Al completar el captcha
+    onCaptchaSuccess(token) {
+      this.captchaToken = token;
+      console.log(' CAPTCHA completado:', token);
+    },
+
+    // Si expira el captcha
+    onCaptchaExpired() {
+      this.captchaToken = '';
+      console.warn(' CAPTCHA expirado, vuelve a verificar.');
+    },
+
     async handleSubmit() {
       // Validar que ambos campos estén llenos
       if (!this.correo || !this.password) {
@@ -82,11 +123,22 @@ export default {
         });
         return; // No continuar con la solicitud
       }
+       // Validar que el CAPTCHA esté completo
+      if (!this.captchaToken) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Verificación requerida',
+          text: 'Por favor, confirma que no eres un robot.',
+          confirmButtonText: 'Aceptar',
+        });
+        return;
+      }
 
       try {
         const response = await this.$publicAxios.post(`${BASE_URL}/auth/login`, {
           correo: this.correo,
           contrasena: this.password,
+          captchaToken: this.captchaToken, //  Enviar token al backend
         });
         
         console.log('Respuesta del servidor:', response.data);
@@ -134,6 +186,16 @@ export default {
 
         }
       } catch (error) {
+        if (error.response && error.response.data.status === "403 Forbidden") {
+          Swal.fire({
+            icon: 'error',
+            title: 'Captcha inválido',
+            text: 'Por favor, vuelve a verificar que no eres un robot.',
+          });
+          if (window.grecaptcha) window.grecaptcha.reset();
+          this.captchaToken = '';
+          return;
+        }
         // Manejar respuesta no exitosa
         if (error.response && error.response.data.status === "401 Unauthorized") {
           // Usar SweetAlert para mostrar error de credenciales incorrectas
