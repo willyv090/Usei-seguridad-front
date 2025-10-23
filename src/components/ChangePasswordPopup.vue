@@ -67,6 +67,14 @@
                 <span class="requirement-icon">{{ validations.noSequential ? '✓' : '✗' }}</span>
                 Sin números secuenciales (ej: 123, 987)
               </li>
+              <li :class="{ 'requirement-met': validations.noRepeatedLetters }">
+                <span class="requirement-icon">{{ validations.noRepeatedLetters ? '✓' : '✗' }}</span>
+                Sin letras repetidas más de 2 veces (ej: aaa)
+              </li>
+              <li :class="{ 'requirement-met': validations.noSequentialLetters }">
+                <span class="requirement-icon">{{ validations.noSequentialLetters ? '✓' : '✗' }}</span>
+                Sin letras secuenciales (ej: abc, ABC, cba)
+              </li>
             </ul>
           </div>
         </div>
@@ -121,7 +129,9 @@ export default {
         hasLowerCase: false,
         hasNumber: false,
         hasSpecialChar: false,
-        noSequential: false
+        noSequential: false,
+        noRepeatedLetters: false,
+        noSequentialLetters: false
       },
       passwordStrength: {
         percentage: 0,
@@ -144,6 +154,8 @@ export default {
       this.validations.hasNumber = /\d/.test(password);
       this.validations.hasSpecialChar = /[@$!%*?&#]/.test(password);
       this.validations.noSequential = !this.hasSequentialNumbers(password);
+      this.validations.noRepeatedLetters = !this.hasRepeatedLetters(password);
+      this.validations.noSequentialLetters = !this.hasSequentialLetters(password);
       this.calculatePasswordStrength();
     },
     hasSequentialNumbers(password) {
@@ -153,6 +165,39 @@ export default {
         const c3 = password.charCodeAt(i + 2);
         if (c1 >= 48 && c1 <= 57 && c2 === c1 + 1 && c3 === c2 + 1) return true;      // asc
         if (c1 >= 48 && c1 <= 57 && c2 === c1 - 1 && c3 === c2 - 1) return true;      // desc
+      }
+      return false;
+    },
+    hasRepeatedLetters(password) {
+      // Detecta más de 2 letras repetidas consecutivas (ej: "aaa", "BBB")
+      for (let i = 0; i < password.length - 2; i++) {
+        const char = password[i];
+        if (/[a-zA-Z]/.test(char)) {
+          if (password[i + 1] === char && password[i + 2] === char) {
+            return true;
+          }
+        }
+      }
+      return false;
+    },
+    hasSequentialLetters(password) {
+      // Detecta letras secuenciales ascendentes o descendentes (ej: "abc", "ABC", "cba", "ZYX")
+      for (let i = 0; i < password.length - 2; i++) {
+        const c1 = password.charCodeAt(i);
+        const c2 = password.charCodeAt(i + 1);
+        const c3 = password.charCodeAt(i + 2);
+        
+        // Verifica si son letras y están en secuencia
+        const isLetter1 = (c1 >= 65 && c1 <= 90) || (c1 >= 97 && c1 <= 122);
+        const isLetter2 = (c2 >= 65 && c2 <= 90) || (c2 >= 97 && c2 <= 122);
+        const isLetter3 = (c3 >= 65 && c3 <= 90) || (c3 >= 97 && c3 <= 122);
+        
+        if (isLetter1 && isLetter2 && isLetter3) {
+          // Secuencia ascendente (ej: abc, ABC)
+          if (c2 === c1 + 1 && c3 === c2 + 1) return true;
+          // Secuencia descendente (ej: cba, CBA)
+          if (c2 === c1 - 1 && c3 === c2 - 1) return true;
+        }
       }
       return false;
     },
