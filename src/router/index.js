@@ -238,6 +238,7 @@ const router = createRouter({
       name: 'MenuSeguridad',
       component: MenuSeguridad
     },
+
     {
       path: '/gestion-usuarios-roles',
       name: 'GestionUsuariosRoles',

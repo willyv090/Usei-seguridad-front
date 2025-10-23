@@ -313,7 +313,7 @@ import FooterComponent from '@/components/FooterComponent.vue';
 import PaginationComponent from '@/components/PaginationComponent.vue';
 import AgregarUsuarioPopup from '@/components/AgregarUsuarioRolPopup.vue';
 import Swal from 'sweetalert2';
-import { BASE_URL } from '@/config/globals';
+import { getBackendUrl } from '@/utils/backendDiscovery';
 
 export default {
   name: 'GestionUsuariosRoles',
@@ -332,8 +332,9 @@ export default {
       selectedId: null,
       totalPages: 1,
       showPopup: false,
-      ROLE_LIST_URL: `${BASE_URL}/rol`,
-      ROLE_MUTATION_BASE: `${BASE_URL}/rol`,
+      BASE_URL: '', // Will be set by backend discovery
+      ROLE_LIST_URL: '',
+      ROLE_MUTATION_BASE: '',
       editMode: false,
       backupRows: [],
       loading: false,
@@ -404,7 +405,19 @@ export default {
     },
   },
 
-  mounted() {
+  async mounted() {
+    // Initialize backend URL
+    try {
+      this.BASE_URL = await getBackendUrl();
+      this.ROLE_LIST_URL = `${this.BASE_URL}/rol`;
+      this.ROLE_MUTATION_BASE = `${this.BASE_URL}/rol`;
+    } catch (error) {
+      console.error('Error discovering backend:', error);
+      this.BASE_URL = 'http://localhost:8080'; // fallback
+      this.ROLE_LIST_URL = `${this.BASE_URL}/rol`;
+      this.ROLE_MUTATION_BASE = `${this.BASE_URL}/rol`;
+    }
+
     // 🔹 Restaurar pestaña anterior si existe
     const savedTab = localStorage.getItem('lastTab');
     if (savedTab) {
@@ -419,7 +432,7 @@ export default {
     async enviarCredenciales(usuario) {
         try {
           this.loading = true; // 🔹 mostrar animación
-          await axios.post(`${BASE_URL}/usuario/${usuario.idUsuario}/enviarCredenciales`);
+          await axios.post(`${this.BASE_URL}/usuario/${usuario.idUsuario}/enviarCredenciales`);
           Swal.fire('Enviado', 'Se han enviado las credenciales al usuario.', 'success');
         } catch (err) {
           console.error('❌ Error al enviar credenciales:', err);
@@ -527,7 +540,7 @@ export default {
     async fetchData(page = 1) {
   try {
     const url = this.currentTab === 'usuarios'
-      ? `${BASE_URL}/usuario`
+      ? `${this.BASE_URL}/usuario`
       : this.ROLE_LIST_URL;
 
     const { data } = await axios.get(url);
@@ -657,7 +670,7 @@ export default {
         return;
       }
 
-      await axios.put(`${BASE_URL}/usuario/${userId}/rol`, {
+      await axios.put(`${this.BASE_URL}/usuario/${userId}/rol`, {
         idRol: rolSeleccionado.idRol
       });
 
@@ -719,7 +732,7 @@ export default {
             return;
           }
 
-          await axios.post(`${BASE_URL}/usuario`, payload, {
+          await axios.post(`${this.BASE_URL}/usuario`, payload, {
             headers: { 'Content-Type': 'application/json' }
           });
 
@@ -787,7 +800,7 @@ export default {
 
       try {
         const url = this.currentTab === 'usuarios'
-          ? `${BASE_URL}/usuario/${id}`
+          ? `${this.BASE_URL}/usuario/${id}`
           : `${this.ROLE_MUTATION_BASE}/${id}`;
         await axios.delete(url);
         await Promise.all([this.fetchData(this.currentPage), this.fetchAllRoles()]);
@@ -836,7 +849,7 @@ export default {
         if (item.carrera) body.carrera = item.carrera;
         if (rolSel) body.idRol = rolSel.idRol;
 
-        await axios.patch(`${BASE_URL}/usuario/${item.idUsuario}`, body, {
+        await axios.patch(`${this.BASE_URL}/usuario/${item.idUsuario}`, body, {
           headers: { 'Content-Type': 'application/json' }
         });
       } else {

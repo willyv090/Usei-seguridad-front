@@ -69,6 +69,9 @@ export default {
     return { router };
   },
   methods: {
+    // Note: attempt tracking is handled server-side. Frontend will rely on
+    // backend response fields such as `attemptsLeft`, `remainingAttempts`, or
+    // `recoveryRequired`. The backend must decrement and persist attempts in DB.
     async handleSubmit() {
       // Validar que ambos campos estén llenos
       if (!this.correo || !this.password) {
@@ -82,6 +85,10 @@ export default {
         });
         return; // No continuar con la solicitud
       }
+
+      // Do not perform local attempt checks. The server will return attempts info
+      // on failed authentication attempts: e.g. { attemptsLeft: 2 } or
+      // { recoveryRequired: true } when the user must go to password recovery.
 
       try {
         const response = await this.$publicAxios.post(`${BASE_URL}/auth/login`, {
@@ -137,12 +144,44 @@ export default {
         // Manejar respuesta no exitosa
         if (error.response && error.response.data.status === "401 Unauthorized") {
           // Usar SweetAlert para mostrar error de credenciales incorrectas
-          Swal.fire({
-            icon: 'error',
-            title: 'Credenciales incorrectas',
-            text: error.response.data.error || 'Por favor, verifique sus credenciales.',
-            confirmButtonText: 'Aceptar',
-          });
+          // Look for server-provided attempt info
+          const resp = error.response && error.response.data ? error.response.data : {};
+          const attemptsLeft = resp.attemptsLeft || resp.remainingAttempts || resp.attemptsRemaining;
+          const recoveryRequired = resp.recoveryRequired || resp.locked || resp.accountLocked;
+
+          if (attemptsLeft !== undefined) {
+            // Show remaining attempts
+            Swal.fire({
+              icon: 'error',
+              title: 'Credenciales incorrectas',
+              text: `${resp.error || 'Por favor, verifique sus credenciales.'} Intentos restantes: ${attemptsLeft}`,
+              confirmButtonText: 'Aceptar',
+            }).then(() => {
+              if (attemptsLeft <= 0 || recoveryRequired) {
+                // After attempts exhausted, send the user to the password recovery flow
+                // The parent listens for `switch-to-code-verification` to show recovery UI
+                this.$emit('switch-to-code-verification');
+              }
+            });
+          } else if (recoveryRequired) {
+            // backend explicitly requests recovery
+            Swal.fire({
+              icon: 'warning',
+              title: 'Acceso bloqueado',
+              text: resp.error || 'Tu cuenta requiere recuperación de contraseña.',
+              confirmButtonText: 'Proceder',
+            }).then(() => {
+              this.$emit('switch-to-code-verification');
+            });
+          } else {
+            // Fallback: generic message if server didn't supply attempts info
+            Swal.fire({
+              icon: 'error',
+              title: 'Credenciales incorrectas',
+              text: resp.error || 'Por favor, verifique sus credenciales.',
+              confirmButtonText: 'Aceptar',
+            });
+          }
         } else {
           // Usar SweetAlert para otros errores
           Swal.fire({

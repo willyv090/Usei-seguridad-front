@@ -144,6 +144,7 @@ import AdminLoginPopup from '@/components/AdminLoginPopup.vue';
 import ChangePasswordPopup from '@/components/ChangePasswordPopup.vue';
 import CodeVerificationPopup from './CodeVerificationPopup.vue';
 import { BASE_URL } from '@/config/globals';
+import { getBackendUrl } from '@/utils/backendDiscovery';
 
 export default {
   name: 'NavBar',
@@ -307,8 +308,19 @@ export default {
     },
     async loadNotifications(page = this.currentPage) {
       const estudianteId = this.estudianteId; // Usar la variable estudianteId ya asignada
+      // Skip loading notifications if we don't have an estudianteId or token (prevents unauthorized errors during trial)
+      const token = localStorage.getItem('authToken');
+      if (!token || !estudianteId) {
+        // Nothing to load; clear notifications and return
+        this.notifications = [];
+        return;
+      }
+
       try {
-        const response = await this.$protectedAxios.get(`${BASE_URL}/notificacion/estudiante/${estudianteId}`, {
+        const backend = await getBackendUrl();
+        if (!backend) return;
+
+        const response = await this.$protectedAxios.get(`${backend}/notificacion/estudiante/${estudianteId}`, {
           params: {
             page: page,
             size: this.pageSize
