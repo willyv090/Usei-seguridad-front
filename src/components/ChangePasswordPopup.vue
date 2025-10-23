@@ -154,6 +154,10 @@ export default {
       type: String,
       default: 'normal' // 'normal' or 'policy-updated'
     },
+    isFromPolicyUpdate: {
+      type: Boolean,
+      default: false
+    },
     showPolicyNotice: {
       type: Boolean,
       default: false
@@ -325,20 +329,48 @@ export default {
       this.isLoading = true;
 
       try {
-        // Use userIdForUpdate if this is a policy update, otherwise get from localStorage
-        const idUsuario = this.userIdForUpdate || localStorage.getItem('idUsuarioCorreo');
-        if (!idUsuario) throw new Error('No se encontró el ID del usuario');
+        // For policy updates, use userIdForUpdate; for normal changes, use localStorage
+        let idUsuario = null;
+        
+        if (this.isFromPolicyUpdate && this.reason === 'policy-updated') {
+          // Policy update scenario - get user ID from stored policy data
+          idUsuario = this.userIdForUpdate;
+          console.log('🔍 Policy update scenario - userIdForUpdate:', idUsuario);
+        } else {
+          // Normal password change - get from localStorage (user is logged in)
+          idUsuario = localStorage.getItem('idUsuarioCorreo') || localStorage.getItem('id_usuario');
+          console.log('🔍 Normal change scenario - localStorage ID:', idUsuario);
+        }
+        
+        console.log('🔍 Password change attempt:');
+        console.log('🔍 isFromPolicyUpdate:', this.isFromPolicyUpdate);
+        console.log('🔍 reason:', this.reason);
+        console.log('🔍 userIdForUpdate:', this.userIdForUpdate);
+        console.log('🔍 localStorage idUsuarioCorreo:', localStorage.getItem('idUsuarioCorreo'));
+        console.log('🔍 localStorage id_usuario:', localStorage.getItem('id_usuario'));
+        console.log('🔍 Final idUsuario to use:', idUsuario);
+        console.log('🔍 New password length:', this.newPassword.length);
+        
+        if (!idUsuario) {
+          console.error('❌ No user ID found!');
+          console.log('🔍 Policy change data in localStorage:', localStorage.getItem('policyPasswordChange'));
+          throw new Error('No se encontró el ID del usuario. Verifique que esté correctamente logueado.');
+        }
 
         // Use backend discovery to get the correct URL
         const { getBackendUrl } = await import('@/utils/backendDiscovery');
         const baseUrl = await getBackendUrl();
+        console.log('🔍 Backend URL:', baseUrl);
 
         // Send password change request
-        await this.$publicAxios.put(
+        console.log('🔍 Sending password change request...');
+        const response = await this.$publicAxios.put(
           `${baseUrl}/usuario/change-password`,
           { newPassword: this.newPassword },                      
           { params: {idUsuario: idUsuario }}                      
         );
+        
+        console.log('🔍 Password change response:', response);
 
         this.isLoading = false;
 
@@ -359,8 +391,18 @@ export default {
         });
       } catch (error) {
         this.isLoading = false;
+        console.log('Password change error - Full error:', error);
+        console.log('Password change error - Response:', error.response);
+        console.log('Password change error - Response status:', error.response?.status);
+        console.log('Password change error - Response data:', error.response?.data);
+        
         // Mostrar mensaje específico del backend si viene texto útil (política, reutilización, etc.)
-        const msg = error?.response?.data || 'Ha ocurrido un error al guardar la contraseña en la base de datos. Por favor intenta nuevamente.';
+        const msg = error?.response?.data?.message || 
+                   error?.response?.data?.error || 
+                   error?.response?.data || 
+                   error?.message || 
+                   'Ha ocurrido un error al guardar la contraseña en la base de datos. Por favor intenta nuevamente.';
+        
         Swal.fire({
           icon: 'error',
           title: 'Error al actualizar la contraseña',

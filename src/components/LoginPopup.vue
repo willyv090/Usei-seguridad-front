@@ -186,7 +186,7 @@ export default {
 
         }
       } catch (error) {
-        if (error.response && error.response.data.status === "403 Forbidden") {
+        if (error.response && (error.response.status === 403 || error.response.data?.status === "403 Forbidden")) {
           Swal.fire({
             icon: 'error',
             title: 'Captcha inválido',
@@ -197,7 +197,10 @@ export default {
           return;
         }
         // Manejar respuesta no exitosa
-        console.log('Login error:', error.response);
+        console.log('Login error - Full error object:', error);
+        console.log('Login error - Response:', error.response);
+        console.log('Login error - Response status:', error.response?.status);
+        console.log('Login error - Response data:', error.response?.data);
         
         // Handle policy update required (426 Upgrade Required)
         if (error.response && error.response.status === 426) {
@@ -230,7 +233,7 @@ export default {
           return;
         }
         
-        if (error.response && error.response.data.status === "401 Unauthorized") {
+        if (error.response && (error.response.status === 401 || error.response.data?.status === "401 Unauthorized")) {
           // Usar SweetAlert para mostrar error de credenciales incorrectas
           // Look for server-provided attempt info
           const resp = error.response && error.response.data ? error.response.data : {};
@@ -272,10 +275,15 @@ export default {
           }
         } else {
           // Usar SweetAlert para otros errores
+          const errorMessage = error.response?.data?.message || 
+                              error.response?.data?.error || 
+                              error.message || 
+                              'Ha ocurrido un error inesperado, intente nuevamente más tarde.';
+          
           Swal.fire({
             icon: 'error',
             title: 'Error en el inicio de sesión',
-            text: 'Ha ocurrido un error inesperado, intente nuevamente más tarde.',
+            text: errorMessage,
             confirmButtonText: 'Aceptar',
           });
         }
