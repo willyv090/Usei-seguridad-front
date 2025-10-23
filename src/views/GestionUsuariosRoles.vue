@@ -44,16 +44,17 @@
             <i class="fas fa-plus-circle"></i>&nbsp;Nuevo
           </button>
         </div>
+
         <!-- Botones a la derecha solo en modo edición -->
-          <div class="toolbar-right" v-if="editMode">
-            <button class="pill save-btn" @click="guardarCambios">
-              <i class="fas fa-save"></i>&nbsp;Guardar cambios
-            </button>
-            <button class="pill cancel-btn" @click="cancelarEdicion">
-              <i class="fas fa-times"></i>&nbsp;Cancelar
-            </button>
-          </div>
+        <div class="toolbar-right" v-if="editMode">
+          <button class="pill save-btn" @click="guardarCambios">
+            <i class="fas fa-save"></i>&nbsp;Guardar cambios
+          </button>
+          <button class="pill cancel-btn" @click="cancelarEdicion">
+            <i class="fas fa-times"></i>&nbsp;Cancelar
+          </button>
         </div>
+      </div>
 
       <!-- Filtros -->
       <div class="filters">
@@ -87,127 +88,122 @@
             </tr>
           </thead>
           <tbody>
-              <tr
-                v-for="(u, idx) in paginatedRows"
-                :key="getId(u) || idx"
-                :class="{ selected: selectedId === getId(u) }"
-                @click="selectRow(u)"
-              >
-                <!-- CI -->
-                <td>
-                  <span v-if="!editMode">{{ u.ci }}</span>
-                  <input v-else v-model="u.ci" class="edit-input" />
-                </td>
+            <tr
+              v-for="(u, idx) in paginatedRows"
+              :key="getId(u) || idx"
+              :class="{ selected: selectedId === getId(u) }"
+              @click="selectRow(u)"
+            >
+              <!-- CI -->
+              <td>
+                <span v-if="!editMode">{{ u.ci }}</span>
+                <input v-else v-model="u.ci" class="edit-input" />
+              </td>
 
-                <!-- Nombre completo -->
-                <td>
-                  <span v-if="!editMode">{{ u.nombre }} {{ u.apellido }}</span>
-                  <div v-else class="edit-name">
-                    <input v-model="u.nombre" placeholder="Nombre" class="edit-input small" />
-                    <input v-model="u.apellido" placeholder="Apellido" class="edit-input small" />
-                  </div>
-                </td>
+              <!-- Nombre completo -->
+              <td>
+                <span v-if="!editMode">{{ u.nombre }} {{ u.apellido }}</span>
+                <div v-else class="edit-name">
+                  <input v-model="u.nombre" placeholder="Nombre" class="edit-input small" />
+                  <input v-model="u.apellido" placeholder="Apellido" class="edit-input small" />
+                </div>
+              </td>
 
-                <!-- Correo -->
-                <td>
-                  <span v-if="!editMode">{{ u.correo }}</span>
-                  <input v-else v-model="u.correo" class="edit-input" />
-                </td>
+              <!-- Correo -->
+              <td>
+                <span v-if="!editMode">{{ u.correo }}</span>
+                <input v-else v-model="u.correo" class="edit-input" />
+              </td>
 
-                <!-- Teléfono -->
-                <td>
-                  <span v-if="!editMode">{{ u.telefono }}</span>
-                  <input v-else v-model="u.telefono" class="edit-input" />
-                </td>
+              <!-- Teléfono -->
+              <td>
+                <span v-if="!editMode">{{ u.telefono }}</span>
+                <input v-else v-model="u.telefono" class="edit-input" />
+              </td>
 
-                <!-- Carrera -->
-                <td>
-                  <span v-if="!editMode">{{ u.carrera }}</span>
-                  <select v-else v-model="u.carrera" class="edit-input">
-                    <option disabled value="">Selecciona una carrera</option>
-                    <option v-for="c in carreras" :key="c" :value="c">{{ c }}</option>
-                  </select>
-                </td>
+              <!-- Carrera -->
+              <td>
+                <span v-if="!editMode">{{ u.carrera }}</span>
+                <select v-else v-model="u.carrera" class="edit-input">
+                  <option disabled value="">Selecciona una carrera</option>
+                  <option v-for="c in carreras" :key="c" :value="c">{{ c }}</option>
+                </select>
+              </td>
 
-
-                <!-- Rol -->
-                <td>
-                  <div class="role-badge-wrap">
-                    <span
-                      v-if="!editMode"
-                      class="badge"
-                      :class="'role-' + normalizeRole(u.rol)"
-                    >
-                      {{ u.rol }}
-                    </span>
-
-                    <select
-                      v-else
-                      class="role-select"
-                      v-model="u.rol"
-                    >
-                      <option
-                        v-for="rol in allRoles"
-                        :key="rol.idRol"
-                        :value="rol.nombreRol"
-                      >
-                        {{ rol.nombreRol }}
-                      </option>
-                    </select>
-                  </div>
-                </td>
-
-                <!-- Acciones -->
-                <td class="center">
-                  <!-- Botón de editar -->
-                  <button
+              <!-- Rol -->
+              <td>
+                <div class="role-badge-wrap">
+                  <span
                     v-if="!editMode"
-                    class="action-btn edit-btn"
-                    @click.stop="activarEdicion"
-                    title="Modificar usuario"
+                    class="badge"
+                    :class="'role-' + normalizeRole(u.rol)"
                   >
-                    <i class="fas fa-pen"></i>
-                  </button>
+                    {{ u.rol }}
+                  </span>
 
-                  <!-- Botón de eliminar -->
-                  <button
-                    class="action-btn delete-btn"
-                    @click.stop="remove(getId(u))"
-                    title="Eliminar usuario"
+                  <select
+                    v-else
+                    class="role-select"
+                    v-model="u.rol"
                   >
-                    <i class="fas fa-trash-alt"></i>
-                  </button>
+                    <option
+                      v-for="rol in allRoles"
+                      :key="rol.idRol"
+                      :value="rol.nombreRol"
+                    >
+                      {{ rol.nombreRol }}
+                    </option>
+                  </select>
+                </div>
+              </td>
 
-                  <!-- Botón de enviar credenciales -->
-                  <button
-                    class="action-btn send-btn"
-                    @click.stop="enviarCredenciales(u)"
-                    title="Enviar credenciales de acceso"
-                  >
-                    <i class="fas fa-paper-plane"></i>
-                  </button>
-                </td>
+              <!-- Acciones -->
+              <td class="center">
+                <!-- Botón de editar -->
+                <button
+                  v-if="!editMode"
+                  class="action-btn edit-btn"
+                  @click.stop="activarEdicion"
+                  title="Modificar usuario"
+                >
+                  <i class="fas fa-pen"></i>
+                </button>
 
-              </tr>
-            </tbody>
+                <!-- Botón de eliminar -->
+                <button
+                  class="action-btn delete-btn"
+                  @click.stop="remove(getId(u))"
+                  title="Eliminar usuario"
+                >
+                  <i class="fas fa-trash-alt"></i>
+                </button>
 
+                <!-- Botón de enviar credenciales -->
+                <button
+                  class="action-btn send-btn"
+                  @click.stop="enviarCredenciales(u)"
+                  title="Enviar credenciales de acceso"
+                >
+                  <i class="fas fa-paper-plane"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-
-          </table>
-        </div>
-
-        <!-- Tabla ROLES -->
-        <div v-else class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th @click="setSort('nombreRol')">Nombre del rol</th>
-                <th>Activo</th>
-                <th>Accesos</th>
-                <th class="center">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
+      <!-- Tabla ROLES -->
+      <div v-else class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th @click="setSort('nombreRol')">Nombre del rol</th>
+              <th>Activo</th>
+              <th>Accesos</th>
+              <th class="center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
             <tr
               v-for="(r, idx) in paginatedRows"
               :key="getId(r) || idx"
@@ -234,51 +230,51 @@
               </td>
 
               <!-- Accesos -->
-                <td>
-                  <div class="flex-access">
-                    <span>
-                      {{
-                        Array.isArray(r.accesos)
-                          ? (r.accesos.length ? r.accesos.join(', ') : 'Sin accesos')
-                          : (r.accesos || 'Sin accesos')
-                      }}
-                    </span>
+              <td class="col-accesos">
+                <div class="flex-access">
+                  <span
+                    :title="Array.isArray(r.accesos) ? r.accesos.join(', ') : (r.accesos || 'Sin accesos')"
+                  >
+                    {{
+                      Array.isArray(r.accesos)
+                        ? (r.accesos.length ? r.accesos.join(', ') : 'Sin accesos')
+                        : (r.accesos || 'Sin accesos')
+                    }}
+                  </span>
 
-                    <!-- 🔹 Mostrar botón de editar accesos solo en modo edición -->
-                    <!-- Botón de editar accesos -->
-                    <button
-                      v-if="editMode"
-                      class="action-btn edit-btn small"
-                      @click.stop="abrirPopupEdicionAccesos(r)"
-                      title="Editar accesos"
-                    >
-                      <i class="fas fa-pen"></i>
-                    </button>
-                  </div>
-                </td>
+                  <!-- Botón de editar accesos (solo en modo edición) -->
+                  <button
+                    v-if="editMode"
+                    class="action-btn edit-btn small"
+                    @click.stop="abrirPopupEdicionAccesos(r)"
+                    title="Editar accesos"
+                  >
+                    <i class="fas fa-pen"></i>
+                  </button>
+                </div>
+              </td>
 
-            <!-- Acciones -->
-            <td class="center">
-              <button
-                v-if="!editMode"
-                class="action-btn edit-btn"
-                @click.stop="activarEdicion"
-                title="Modificar rol"
-              >
-                <i class="fas fa-pen"></i>
-              </button>
+              <!-- Acciones -->
+              <td class="center">
+                <button
+                  v-if="!editMode"
+                  class="action-btn edit-btn"
+                  @click.stop="activarEdicion"
+                  title="Modificar rol"
+                >
+                  <i class="fas fa-pen"></i>
+                </button>
 
-              <button
-                class="action-btn delete-btn"
-                @click.stop="remove(getId(r))"
-                title="Eliminar rol"
-              >
-                <i class="fas fa-trash-alt"></i>
-              </button>
-            </td>
-          </tr>
-  </tbody>
-
+                <button
+                  class="action-btn delete-btn"
+                  @click.stop="remove(getId(r))"
+                  title="Eliminar rol"
+                >
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
 
@@ -301,8 +297,6 @@
       @close="closePopup"
       @guardar="onGuardar"
     />
-
-
   </div>
 </template>
 
@@ -1231,6 +1225,30 @@ td.center .action-btn {
   max-height: 70vh;
 }
 
+.col-accesos .flex-access {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start; 
+}
+
+.col-accesos .flex-access > span{
+  white-space: normal;
+  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;   
+  -webkit-box-orient: vertical;
+  line-clamp: 2;
+  box-orient: vertical;
+  line-height: 1.25;
+  max-height: calc(1.25em * 2);
+}
+
+.col-accesos .action-btn.small {
+  flex: 0 0 auto;            
+  align-self: flex-start;     
+}
 
 </style>
 
