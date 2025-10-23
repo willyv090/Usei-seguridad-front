@@ -410,16 +410,32 @@ export default {
     this.fetchData();
   },
   methods: {
- normalizeRole(nombre) {
-  if (!nombre) return 'default';
-  return nombre
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')   // quita tildes
-    .replace(/\s+/g, '-')              // espacios → guiones
-    .replace(/[^a-z0-9-]/g, '')        // elimina símbolos
-    .replace(/-+$/, '');               // 🔹 elimina guiones finales
-},
+
+  // 🔹 Detecta si el CI tiene números secuenciales (ascendentes o descendentes)
+  esSecuencial(ci) {
+    if (!/^\d+$/.test(ci)) return false; // si no son solo números, no valida
+    const asc = "0123456789";
+    const desc = "9876543210";
+
+    // Buscar 5 o más dígitos consecutivos ascendentes o descendentes
+    for (let i = 0; i <= ci.length - 5; i++) {
+      const segmento = ci.slice(i, i + 5);
+      if (asc.includes(segmento) || desc.includes(segmento)) {
+        return true;
+      }
+    }
+    return false;
+  },
+    normalizeRole(nombre) {
+    if (!nombre) return 'default';
+    return nombre
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')   // quita tildes
+      .replace(/\s+/g, '-')              // espacios → guiones
+      .replace(/[^a-z0-9-]/g, '')        // elimina símbolos
+      .replace(/-+$/, '');               // 🔹 elimina guiones finales
+  },
 
     async enviarCredenciales(usuario) {
         try {
@@ -719,10 +735,19 @@ export default {
     async handleGuardarNuevo(payload) {
       try {
         if (this.currentTab === 'usuarios') {
-          if (!payload.correo || payload.correo.trim() === '') {
-            Swal.fire('Advertencia', 'Debe ingresar un correo válido para enviar las credenciales.', 'warning');
-            return;
-          }
+            if (!payload.correo || payload.correo.trim() === '') {
+              Swal.fire('Advertencia', 'Debe ingresar un correo válido para enviar las credenciales.', 'warning');
+              return;
+            }
+            // Validar CI secuencial
+            if (this.esSecuencial(payload.ci)) {
+              Swal.fire({
+                icon: 'warning',
+                title: 'CI inválido',
+                text: 'El número de Cédula no debe contener secuencias numéricas consecutivas como 12345 o 98765.'
+              });
+              return;
+            }
 
           await axios.post(`${BASE_URL}/usuario`, payload, {
             headers: { 'Content-Type': 'application/json' }
@@ -832,6 +857,15 @@ export default {
       const emailRegex = /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/;
 
       for (const item of cambios) {
+        // Validar CI secuencial
+          if (this.esSecuencial(item.ci)) {
+            await Swal.fire({
+              icon: 'warning',
+              title: 'CI inválido',
+              text: `El CI "${item.ci}" contiene una secuencia numérica consecutiva (por ejemplo 12345 o 98765).`,
+            });
+            return;
+          }
         if (this.currentTab === 'usuarios') {
           // ⚠️ Validar correo
           if (!emailRegex.test(item.correo.trim())) {
