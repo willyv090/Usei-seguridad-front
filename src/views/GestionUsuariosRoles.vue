@@ -136,7 +136,7 @@
                     <span
                       v-if="!editMode"
                       class="badge"
-                      :class="'role-' + (u.rol || 'default').toLowerCase()"
+                      :class="'role-' + normalizeRole(u.rol)"
                     >
                       {{ u.rol }}
                     </span>
@@ -416,6 +416,17 @@ export default {
     this.fetchData();
   },
   methods: {
+ normalizeRole(nombre) {
+  if (!nombre) return 'default';
+  return nombre
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')   // quita tildes
+    .replace(/\s+/g, '-')              // espacios → guiones
+    .replace(/[^a-z0-9-]/g, '')        // elimina símbolos
+    .replace(/-+$/, '');               // 🔹 elimina guiones finales
+},
+
     async enviarCredenciales(usuario) {
         try {
           this.loading = true; // 🔹 mostrar animación
@@ -1044,7 +1055,7 @@ td.center .action-btn {
   z-index: 10;
 }
 
-/* --- Badges de roles con colores --- */
+/* === BADGES DE ROLES === */
 .role-badge-wrap {
   display: flex;
   align-items: center;
@@ -1059,25 +1070,33 @@ td.center .action-btn {
   text-transform: capitalize;
 }
 
-.role-seguridad {
-  background-color: #da726e; /* rojo */
+/* ✅ Colores específicos primero (con prioridad alta) */
+::v-deep(.role-estudiante) {
+  background-color: #7cb97c !important; /* verde */
+  color: white !important;
 }
 
-.role-estudiante {
-  background-color: #7cb97c; /* verde */
+::v-deep(.role-director) {
+  background-color: #74abdb !important; /* azul */
+  color: white !important;
 }
 
-.role-director {
-  background-color: #74abdb; /* azul */
+::v-deep(.role-administrador) {
+  background-color: #8E6C88 !important; /* violeta oscuro */
+  color: white !important;
 }
 
-.role-administrador {
-  background-color: #8E6C88; /* violeta */
+::v-deep(.role-seguridad) {
+  background-color: #da726e !important; /* rojo */
+  color: white !important;
 }
 
-.role-default {
-  background-color: #b361b6; /* gris por defecto */
+/* 🔹 Color por defecto — se aplica solo si no coincide con los anteriores */
+::v-deep(.badge[class*="role-"]:not(.role-estudiante):not(.role-administrador):not(.role-director):not(.role-seguridad)) {
+  background-color: #b361b6 !important; /* violeta suave */
+  color: white !important;
 }
+
 
 .edit-input {
   width: 100%;
