@@ -111,7 +111,7 @@
       @close="showLoginPopup = false" 
       @switch-to-register="switchToRegister" 
       @switch-to-admin-login="switchToAdminLogin" 
-      @switch-to-change-password="switchToChangePassword"
+      @switch-to-change-password="handlePolicyPasswordChange"
       @switch-to-code-verification="switchToCodeVerification"
     />
     <AdminLoginPopup 
@@ -123,7 +123,10 @@
     />
     <ChangePasswordPopup 
       v-if="showChangePasswordPopup" 
-      @close=" showChangePasswordPopup= false"
+      :isFromPolicyUpdate="policyPasswordChange"
+      :reason="policyPasswordChange ? 'policy-updated' : ''"
+      @close="closeChangePassword"
+      @login-success="handleAutoLoginSuccess"
       @switch-to-change-password="switchToChangePassword"
       @switch-to-student-login="switchToStudentLogin" 
     />
@@ -170,6 +173,7 @@ export default {
       showNotifications: false,
       showChangePasswordPopup: false,
       showCodeVerificationPopup: false,
+      policyPasswordChange: false,
       username: '',
       role: '',
       notifications: [],
@@ -384,6 +388,33 @@ export default {
       } else if (this.userRole === 'Administrador') {
         this.$router.push('/formulario-soporte'); // Para administradores redirigir a formularioSoporte
       }
+    },
+    handlePolicyPasswordChange() {
+      // Close LoginPopup and open ChangePasswordPopup for policy update
+      this.showLoginPopup = false;
+      this.policyPasswordChange = true;
+      this.showChangePasswordPopup = true;
+    },
+    closeChangePassword() {
+      this.showChangePasswordPopup = false;
+      this.policyPasswordChange = false;
+      // Clear temporary policy data
+      localStorage.removeItem('policyPasswordChange');
+    },
+    handleAutoLoginSuccess(userData) {
+      // Close all popups
+      this.showChangePasswordPopup = false;
+      this.showLoginPopup = false;
+      this.policyPasswordChange = false;
+      
+      // Update NavBar with user data
+      this.username = userData.username || userData.email;
+      this.role = userData.role;
+      
+      // Emit event to parent components if needed
+      this.$emit('user-logged-in', userData);
+      
+      console.log('User automatically logged in after password update:', userData);
     }
   },
 };

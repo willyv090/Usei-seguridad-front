@@ -197,6 +197,39 @@ export default {
           return;
         }
         // Manejar respuesta no exitosa
+        console.log('Login error:', error.response);
+        
+        // Handle policy update required (426 Upgrade Required)
+        if (error.response && error.response.status === 426) {
+          const resp = error.response.data || {};
+          console.log('Policy update required:', resp);
+          
+          Swal.fire({
+            icon: 'warning',
+            title: 'Políticas de Seguridad Actualizadas',
+            text: 'Las políticas de seguridad han sido actualizadas. Debe cambiar su contraseña para cumplir con los nuevos requisitos.',
+            confirmButtonText: 'Cambiar Contraseña',
+            allowOutsideClick: false,
+            allowEscapeKey: false
+          }).then((result) => {
+            if (result.isConfirmed) {
+              // Store policy data temporarily including email for automatic login
+              const policyData = {
+                userId: resp.idUsuario || localStorage.getItem('idUsuarioCorreo'),
+                email: this.correo, // Store original email for automatic login
+                reason: 'policy-updated',
+                timestamp: Date.now()
+              };
+              localStorage.setItem('policyPasswordChange', JSON.stringify(policyData));
+              
+              // Close the LoginPopup and open ChangePasswordPopup
+              this.$emit('close');
+              this.$emit('switch-to-change-password');
+            }
+          });
+          return;
+        }
+        
         if (error.response && error.response.data.status === "401 Unauthorized") {
           // Usar SweetAlert para mostrar error de credenciales incorrectas
           // Look for server-provided attempt info
