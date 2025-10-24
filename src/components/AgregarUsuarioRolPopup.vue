@@ -24,25 +24,56 @@
         <div v-if="step === 1" class="step">
           <form @submit.prevent>
             <template v-if="mode==='usuarios'">
-              <div class="form-group">
-                <label for="ci">Cédula de Identidad</label>
-                <input id="ci" v-model="form.ci" type="text" required />
-              </div>
+              <div class="form-group ci-group">
+            <label for="ci">Cédula de Identidad</label>
+            <input
+              id="ci"
+              v-model="form.ci"
+              type="text"
+              required
+              :class="{ 'input-error': ciSecuencial }"
+            />
+            <small v-if="ciSecuencial" class="tooltip-error">
+              El CI no debe contener secuencias numéricas consecutivas (como 12345 o 98765)
+            </small>
+          </div>
 
               <div class="form-group">
                 <label for="nombre">Nombre</label>
-                <input id="nombre" v-model="form.nombre" type="text" required />
+                <input
+                  id="nombre"
+                  v-model="form.nombre"
+                  type="text"
+                  required
+                  @input="normalizarNombreYApellido"
+                />
               </div>
 
               <div class="form-group">
                 <label for="apellido">Apellido</label>
-                <input id="apellido" v-model="form.apellido" type="text" required />
+                <input
+                  id="apellido"
+                  v-model="form.apellido"
+                  type="text"
+                  required
+                  @input="normalizarNombreYApellido"
+                />
               </div>
 
-              <div class="form-group">
+              <div class="form-group correo-group">
                 <label for="correo">Correo</label>
-                <input id="correo" v-model="form.correo" type="email" required />
+                <input
+                  id="correo"
+                  v-model="form.correo"
+                  type="email"
+                  required
+                  :class="{ 'input-error': correoInvalido }"
+                />
+                <small v-if="correoInvalido" class="tooltip-error">
+                  Ingresa un correo válido (ejemplo: nombre.apellido@ucb.edu.bo)
+                </small>
               </div>
+
             </template>
 
             <template v-else>
@@ -75,7 +106,7 @@
         <!-- STEP 2 -->
         <div v-else-if="step === 2" class="step step-scrollable">
           <form @submit.prevent>
-            <!-- 🔹 Si es modo usuarios -->
+            <!-- modo usuarios -->
             <template v-if="mode==='usuarios'">
               <div class="form-group">
                 <label for="telefono">Teléfono</label>
@@ -176,7 +207,9 @@ export default {
 
   data() {
   return {
+    correoInvalido: false,
     step: 1,
+    ciSecuencial: false,
     showPassword: false,
     tooltipMensaje: "", // ⚠️ texto del tooltip dinámico
     form: this.mode === 'usuarios'
@@ -255,6 +288,25 @@ export default {
   },
 
   methods: {
+    esSecuencial(ci) {
+      if (!/^\d+$/.test(ci)) return false;
+      const asc = "0123456789";
+      const desc = "9876543210";
+      for (let i = 0; i <= ci.length - 5; i++) {
+        const seg = ci.slice(i, i + 5);
+        if (asc.includes(seg) || desc.includes(seg)) return true;
+      }
+      return false;
+    },
+    watch: {
+        'form.ci'(nuevo) {
+          this.ciSecuencial = this.esSecuencial(nuevo.trim());
+        },
+        'form.correo'(nuevo) {
+          const emailRegex = /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/;
+          this.correoInvalido = nuevo.trim() !== '' && !emailRegex.test(nuevo.trim());
+        }
+      },
     toggleAcceso(mod) {
       if (this.form.accesos.includes(mod)) {
         this.form.accesos = this.form.accesos.filter(a => a !== mod);
@@ -264,11 +316,29 @@ export default {
     },
 
     goToStep(num) {
+      // Validacion del CI secuencial
+        if (this.esSecuencial(this.form.ci)) {
+          this.ciSecuencial = true;
+          return swal.fire({
+            icon: 'warning',
+            title: 'CI inválido',
+            text: 'El número de Cédula no debe contener secuencias numéricas consecutivas (como 12345 o 98765).'
+          });
+        }
       if (num === 2 && this.step === 1) {
         if (this.mode === 'usuarios') {
           if (!this.form.ci || !this.form.nombre || !this.form.apellido || !this.form.correo) {
             return swal.fire({ icon: 'warning', title: 'Completa los campos del paso 1.' });
           }
+          const emailRegex = /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailRegex.test(this.form.correo.trim())) {
+              this.correoInvalido = true;
+              return swal.fire({
+                icon: 'warning',
+                title: 'Correo inválido',
+                text: 'Por favor ingresa un correo con formato válido (usuario@ucb.edu.bo).'
+              });
+            }
         } else if (this.mode === 'roles') {
           if (!this.form.nombreRol || !this.form.nombreRol.trim()) {
             return swal.fire({ icon: 'warning', title: 'El nombre del rol es obligatorio.' });
@@ -296,8 +366,30 @@ export default {
           this.tooltipMensaje = "";
         }
       },
+      capitalizarPalabras(texto) {
+        if (!texto) return '';
+        return texto
+          .toLowerCase()
+          .replace(/(?:^|\s|-|')[a-z]/g, l => l.toUpperCase()) // Mayúscula después de espacio, guion o apóstrofe
+          .replace(/\s+/g, ' ')
+          .trim();
+      },
+
+      normalizarNombreYApellido() {
+          this.form.nombre = this.capitalizarPalabras(this.form.nombre?.trim());
+          this.form.apellido = this.capitalizarPalabras(this.form.apellido?.trim());
+        },
 
     submitForm() {
+      // Validar CI secuencial 
+          if (this.esSecuencial(this.form.ci)) {
+            this.ciSecuencial = true;
+            return swal.fire({
+              icon: 'warning',
+              title: 'CI inválido',
+              text: 'El número de Cédula no debe contener secuencias numéricas consecutivas (como 12345 o 98765).'
+            });
+          }
         if (this.mode === 'usuarios') {
           const required = ['ci', 'nombre', 'apellido', 'correo', 'idRol'];
           if (required.some(k => !String(this.form[k] || '').trim())) {
@@ -468,6 +560,32 @@ input, select, textarea {
   border-radius: 6px;
   font-size: 12px;
   margin-top: 4px;
+}
+.input-error {
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 5px rgba(231, 76, 60, 0.6);
+}
+
+.tooltip-error {
+  display: inline-block;
+  color: #a94442;
+  background: #f2dede;
+  border: 1px solid #ebccd1;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.correo-group {
+  position: relative;
+}
+.ci-group {
+  position: relative;
+}
+
+.ci-group .tooltip-error {
+  margin-top: 6px;
 }
 
 </style>
