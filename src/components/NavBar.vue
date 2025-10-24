@@ -123,8 +123,9 @@
     />
     <ChangePasswordPopup 
       v-if="showChangePasswordPopup" 
+      :userId="changePasswordUserId"
       :isFromPolicyUpdate="policyPasswordChange"
-      :reason="policyPasswordChange ? 'policy-updated' : ''"
+      :reason="changePasswordReason"
       @close="closeChangePassword"
       @login-success="handleAutoLoginSuccess"
       @switch-to-change-password="switchToChangePassword"
@@ -174,6 +175,8 @@ export default {
       showChangePasswordPopup: false,
       showCodeVerificationPopup: false,
       policyPasswordChange: false,
+  changePasswordUserId: null,
+  changePasswordReason: '',
       username: '',
       role: '',
       notifications: [],
@@ -390,16 +393,36 @@ export default {
       }
     },
     handlePolicyPasswordChange() {
-      // Close LoginPopup and open ChangePasswordPopup for policy update
+      // Close LoginPopup and open ChangePasswordPopup.
+      // Detecta si el LoginPopup guardó datos de "first login" en localStorage
       this.showLoginPopup = false;
-      this.policyPasswordChange = true;
+      // Leer valores guardados por LoginPopup cuando detectó primer login
+      const firstId = localStorage.getItem('firstLoginUserId');
+      const firstCorreo = localStorage.getItem('firstLoginCorreo');
+      if (firstId || firstCorreo) {
+        // Abrir el flujo de cambio por primer login
+        this.changePasswordUserId = firstId || null;
+        this.changePasswordReason = 'first-login';
+        this.policyPasswordChange = false; // no es actualización de políticas
+      } else {
+        // Flujo de actualización de políticas (cuando NavBar invoca esto desde LoginPopup 426)
+        this.policyPasswordChange = true;
+        this.changePasswordUserId = null;
+        this.changePasswordReason = 'policy-updated';
+      }
+
       this.showChangePasswordPopup = true;
     },
     closeChangePassword() {
       this.showChangePasswordPopup = false;
       this.policyPasswordChange = false;
+      this.changePasswordUserId = null;
+      this.changePasswordReason = '';
       // Clear temporary policy data
       localStorage.removeItem('policyPasswordChange');
+      // Also clear first-login temp keys
+      localStorage.removeItem('firstLoginUserId');
+      localStorage.removeItem('firstLoginCorreo');
     },
     handleAutoLoginSuccess(userData) {
       // Close all popups
