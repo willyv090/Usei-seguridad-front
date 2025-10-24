@@ -411,7 +411,20 @@ export default {
   },
   methods: {
 
-  // 🔹 Detecta si el CI tiene números secuenciales (ascendentes o descendentes)
+    activarEdicion() {
+      this.editMode = true;
+      this.backupRows = JSON.parse(JSON.stringify(this.rows));
+
+      // Evita el salto de scroll al enfocar inputs
+      this.$nextTick(() => {
+        const activeEl = document.activeElement;
+        if (activeEl && activeEl.scrollIntoView) {
+          activeEl.scrollIntoView({ block: "nearest", behavior: "auto" });
+        }
+      });
+    },
+
+  // Detecta si el CI tiene números secuenciales (ascendentes o descendentes)
   esSecuencial(ci) {
     if (!/^\d+$/.test(ci)) return false; // si no son solo números, no valida
     const asc = "0123456789";
@@ -668,7 +681,6 @@ export default {
       const userId = usuario.idUsuario;
       const nuevoRol = usuario.rol;
 
-      // Encuentra el objeto completo del rol
       const rolSeleccionado = this.allRoles.find(
         r => r.nombreRol === nuevoRol
       );
@@ -689,7 +701,7 @@ export default {
         showConfirmButton: false
       });
     } catch (error) {
-      console.error('❌ Error al actualizar rol:', error);
+      console.error('Error al actualizar rol:', error);
       Swal.fire('Error', 'No se pudo actualizar el rol del usuario.', 'error');
     }
   },
@@ -710,7 +722,7 @@ export default {
         });
       } catch (e) {
         rol.activo = estadoAnterior;
-        console.error('❌ Error al cambiar estado:', e);
+        console.error('Error al cambiar estado:', e);
         Swal.fire('Error', 'No se pudo cambiar el estado del rol.', 'error');
       }
     },
@@ -724,7 +736,6 @@ export default {
 
     closePopup() {
     this.showPopup = false;
-    // 🔄 Refrescar automáticamente los datos al cerrar popup
     setTimeout(() => {
       this.fetchData();
       this.fetchAllRoles();
@@ -770,7 +781,7 @@ export default {
           });
         } 
         
-        // 🔹 Creación de ROL
+        // Creación de ROL
         else if (this.currentTab === 'roles') {
           const accesosString = Array.isArray(payload.accesos)
             ? payload.accesos.join(',')
@@ -799,11 +810,11 @@ export default {
         Swal.fire('Éxito', 'Registro creado correctamente.', 'success');
 
       } catch (e) {
-        console.error('❌ Error al guardar rol o usuario:', e.response?.data || e.message);
+        console.error('Error al guardar rol o usuario:', e.response?.data || e.message);
         const msg = e?.response?.data ?? 'No se pudo crear el registro.';
         Swal.fire('Error', String(msg), 'error');
       } finally {
-        this.loading = false; // 🔹 Ocultar animación de carga al terminar
+        this.loading = false; 
       }
     },
 
@@ -828,14 +839,13 @@ export default {
         await Promise.all([this.fetchData(this.currentPage), this.fetchAllRoles()]);
         Swal.fire('Eliminado', 'Se eliminó correctamente.', 'success');
       } catch (e) {
-        console.error('❌ Error al eliminar:', e);
+        console.error('Error al eliminar:', e);
         const msg = e?.response?.data ?? 'No se pudo eliminar.';
         Swal.fire('Error', String(msg), 'error');
       }
     },
     activarEdicion() {
     this.editMode = true;
-    // Hacer una copia profunda de la tabla actual para poder cancelar luego
     this.backupRows = JSON.parse(JSON.stringify(this.rows));
   },
 
@@ -872,7 +882,7 @@ export default {
             return;
           }
         if (this.currentTab === 'usuarios') {
-          // ⚠️ Validar correo
+          // Validar correo
           if (!emailRegex.test(item.correo.trim())) {
             await Swal.fire({
               icon: 'warning',
@@ -920,7 +930,7 @@ export default {
         window.location.reload();
       });
     } catch (err) {
-      console.error('❌ Error al guardar cambios:', err);
+      console.error('Error al guardar cambios:', err);
       Swal.fire('Error', 'No se pudieron guardar los cambios.', 'error');
     }
   },
@@ -968,7 +978,6 @@ th { background: #263D42; color: #fff; }
   border: 1px solid #c0392b;
 }
 
-/* --- SWITCH TOGGLE --- */
 .switch {
   position: relative;
   display: inline-block;
@@ -1003,7 +1012,6 @@ input:checked + .slider:before {
   transform: translateX(22px);
 }
 
-/* === BOTONES DE ACCIÓN CON TOOLTIP === */
 .action-btn {
   position: relative;
   padding: 10px;
@@ -1018,14 +1026,12 @@ input:checked + .slider:before {
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
 }
 
-/* Hover visual */
 .action-btn:hover {
   transform: scale(1.12) translateY(-2px);
   opacity: 0.95;
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
-/* Tooltip */
 .action-btn::after {
   content: attr(title);
   position: absolute;
@@ -1047,7 +1053,6 @@ input:checked + .slider:before {
   z-index: 999;
 }
 
-/* Triángulo */
 .action-btn::before {
   content: "";
   position: absolute;
@@ -1062,14 +1067,12 @@ input:checked + .slider:before {
   z-index: 999;
 }
 
-/* Mostrar tooltip */
 .action-btn:hover::after,
 .action-btn:hover::before {
   opacity: 1;
   transform: translateX(-50%) translateY(-4px);
 }
 
-/* Colores por acción */
 .edit-btn {
   background: linear-gradient(145deg, #8E6C88, #a17ca1);
 }
@@ -1118,6 +1121,7 @@ td.center .action-btn {
   text-transform: capitalize;
 }
 
+/* === COLORES PARA MANEJO DE ROLES === */
 ::v-deep(.role-estudiante) {
   background-color: #7cb97c !important;
   color: white !important;
@@ -1252,6 +1256,70 @@ td.center .action-btn {
   flex: 0 0 auto;
   align-self: flex-start;
 }
+
+.edit-name {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 36px; 
+}
+
+td {
+  vertical-align: middle;
+}
+
+.edit-input.small {
+  width: 48%;
+  min-width: 48%;
+  height: 32px;
+  box-sizing: border-box;
+  transition: all 0.1s ease-in-out;
+}
+
+td > span,
+.edit-name {
+  display: inline-flex;
+  align-items: center;
+  height: 36px; 
+}
+
+.table-wrap {
+  overflow-y: overlay; 
+  scroll-behavior: smooth;
+}
+
+.table-wrap table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.edit-name {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 38px;
+  height: 38px;
+}
+
+.edit-input.small {
+  height: 32px;
+  line-height: 32px;
+  padding: 0 6px;
+  margin: 0;
+}
+
+tr {
+  transition: background-color 0.2s ease;
+}
+
+td {
+  height: 40px;
+  vertical-align: middle;
+  position: relative;
+}
+
 </style>
 
 
