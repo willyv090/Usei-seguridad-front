@@ -142,7 +142,7 @@ export default {
         });
         
         console.log('Respuesta del servidor:', response.data);
-
+        if (await this.handleFirstLoginRequired(response)) return;
         // Manejar respuesta exitosa
         if (response.data.status === "200 OK") {
           const { token, expiresIn, data } = response.data;
@@ -185,8 +185,13 @@ export default {
         });
 
         }
+        
       } catch (error) {
-        if (error.response && (error.response.status === 403 || error.response.data?.status === "403 Forbidden")) {
+        // Primero: comprobar si el error indica que es necesario cambiar contraseña en primer login
+        if (await this.handleFirstLoginRequired(error)) return;
+
+        if (error.response && error.response.data && error.response.data.status === "403 Forbidden") {
+          // Caso de captcha inválido (backend que devuelve 403 con status en el body)
           Swal.fire({
             icon: 'error',
             title: 'Captcha inválido',
@@ -197,16 +202,13 @@ export default {
           return;
         }
         // Manejar respuesta no exitosa
-        console.log('Login error - Full error object:', error);
-        console.log('Login error - Response:', error.response);
-        console.log('Login error - Response status:', error.response?.status);
-        console.log('Login error - Response data:', error.response?.data);
-        
+        console.log('Login error:', error.response);
+
         // Handle policy update required (426 Upgrade Required)
         if (error.response && error.response.status === 426) {
           const resp = error.response.data || {};
           console.log('Policy update required:', resp);
-          
+
           Swal.fire({
             icon: 'warning',
             title: 'Políticas de Seguridad Actualizadas',
@@ -224,7 +226,7 @@ export default {
                 timestamp: Date.now()
               };
               localStorage.setItem('policyPasswordChange', JSON.stringify(policyData));
-              
+
               // Close the LoginPopup and open ChangePasswordPopup
               this.$emit('close');
               this.$emit('switch-to-change-password');
@@ -232,8 +234,8 @@ export default {
           });
           return;
         }
-        
-        if (error.response && (error.response.status === 401 || error.response.data?.status === "401 Unauthorized")) {
+
+        if (error.response && error.response.data && error.response.data.status === "401 Unauthorized") {
           // Usar SweetAlert para mostrar error de credenciales incorrectas
           // Look for server-provided attempt info
           const resp = error.response && error.response.data ? error.response.data : {};
@@ -287,8 +289,73 @@ export default {
             confirmButtonText: 'Aceptar',
           });
         }
+        // Por si quedó sin manejar arriba, intentamos detectar primer login una vez más
+        if (await this.handleFirstLoginRequired(error)) return;
       }
     },
+    // Maneja PRIMER LOGIN tanto si vino como 403 (error) como si vino 200 OK con cambioContrasenia=true (éxito)
+    async handleFirstLoginRequired(respOrError) {
+      // Si viene desde un catch de axios (403), respOrError.response existe.
+      // Si viene desde un then (200), respOrError YA es la response.
+      const isAxiosError = !!respOrError?.response;
+      const resp = isAxiosError ? respOrError.response : respOrError;
+
+      const data = resp?.data || {};
+      const httpStatus = resp?.status;
+
+      // Caso 200 OK: el back manda el flag en data.data.cambioContrasenia
+      const user = data?.data || {};
+      const cambioFrom200 =
+        httpStatus === 200 &&
+        user?.cambioContrasenia === true;
+
+      // Caso 403: el back manda el flag/razón a nivel raíz
+      const cambioFrom403 =
+        httpStatus === 403 &&
+        (data?.cambio_contrasenia === true ||
+        String(data?.reason || '').toUpperCase().includes('FIRST_LOGIN'));
+
+      // Si no aplica primer login, no hacemos nada
+      if (!(cambioFrom200 || cambioFrom403)) return false;
+
+      // Normaliza id y correo según el caso
+      const uid = (cambioFrom200
+          ? (user.id_usuario ?? user.idUsuario ?? user.id)
+          : (data.id_usuario ?? data.idUsuario ?? data.id)
+        ) ?? null;
+
+      const email = (cambioFrom200
+          ? (user.correo ?? user.email)
+          : (data.correo ?? data.email)
+        ) ?? null;
+
+      // Persistimos para el ChangePasswordPopup
+      if (uid)   localStorage.setItem('firstLoginUserId', String(uid));
+      if (email) localStorage.setItem('firstLoginCorreo', email);
+      localStorage.setItem('cambio_contrasenia', 'true');
+
+      // Mensaje y cambio de popup
+      await this.$swal?.fire?.({
+        icon: 'warning',
+        title: 'Cambio de contraseña requerido',
+        text: (data?.message || 'Debes actualizar tu contraseña (primer ingreso).'),
+        confirmButtonText: 'Cambiar ahora',
+        allowOutsideClick: false,
+        allowEscapeKey: false
+      });
+
+      // Cerrar login y abrir el popup de cambio
+      this.$emit('close');
+      this.$emit('switch-to-change-password', {
+        userId: uid,
+        email,
+        reason: 'first-login'
+      });
+
+      return true; // indicamos que ya manejamos el flujo de primer login
+    },
+
+
     forgotPassword() {
       // Implementar lógica de recuperación de contraseña
       Swal.fire({

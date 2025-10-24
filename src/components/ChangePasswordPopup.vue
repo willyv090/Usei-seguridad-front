@@ -161,6 +161,10 @@ export default {
     showPolicyNotice: {
       type: Boolean,
       default: false
+    },
+    isFromPolicyUpdate: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -205,6 +209,8 @@ export default {
     }
   },
   async mounted() {
+    this.userIdForUpdate = this.userId || localStorage.getItem('firstLoginUserId');
+    this.emailForAutoLogin = this.originalEmail || localStorage.getItem('firstLoginCorreo');
     // Fetch current security policies to show dynamic requirements
     await this.fetchCurrentPolicies();
     
@@ -221,6 +227,14 @@ export default {
           console.error('Error parsing policy data:', error);
         }
       }
+    }
+
+    // If we received a userId prop (first-login scenario), use it
+    if (this.userId && !this.userIdForUpdate) {
+      this.userIdForUpdate = this.userId;
+      // Try to get original email saved by LoginPopup
+      const firstCorreo = localStorage.getItem('firstLoginCorreo');
+      if (firstCorreo) this.originalEmail = firstCorreo;
     }
   },
   methods: {
