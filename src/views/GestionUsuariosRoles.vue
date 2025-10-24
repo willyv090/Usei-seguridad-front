@@ -859,7 +859,7 @@ export default {
     Swal.fire('Cancelado', 'No se realizaron cambios.', 'info');
   },
 
-   async guardarCambios() {
+  async guardarCambios() {
     try {
       const cambios = this.rows.filter((item, i) => {
         const original = this.backupRows[i];
@@ -905,7 +905,7 @@ export default {
           if (item.carrera) body.carrera = item.carrera;
           if (rolSel) body.idRol = rolSel.idRol;
 
-          await axios.patch(`${BASE_URL}/usuario/${item.idUsuario}`, body, {
+          await axios.patch(`${this.BASE_URL}/usuario/${item.idUsuario}`, body, {
             headers: { 'Content-Type': 'application/json' }
           });
         } else {
