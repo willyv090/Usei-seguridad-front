@@ -255,12 +255,13 @@ export default {
   computed: {
     resumenUsuario() {
       const f = this.form;
+      const rolNombre = this.roles?.find(r => r.idRol === f.idRol)?.nombreRol || '(sin rol asignado)';
       return `CI: ${f.ci}
       Nombre completo: ${f.nombre} ${f.apellido}
       Correo: ${f.correo}
       Teléfono: ${f.telefono}
       Carrera: ${f.carrera}
-      Rol asignado: ${f.idRol}`;
+      Rol: ${rolNombre}`; //  Cambiado
     },
     resumenRol() {
       const f = this.form;
