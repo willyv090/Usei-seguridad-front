@@ -242,7 +242,7 @@
                     }}
                   </span>
 
-                  <!-- Botón de editar accesos (solo en modo edición) -->
+                  <!-- Botón de editar accesos -->
                   <button
                     v-if="editMode"
                     class="action-btn edit-btn small"
@@ -975,7 +975,7 @@ th { background: #263D42; color: #fff; }
   position: absolute;
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
-  background-color: #b0b0b0; /* gris apagado */
+  background-color: #b0b0b0;
   transition: 0.3s;
   border-radius: 24px;
   box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.25);
@@ -998,95 +998,104 @@ input:checked + .slider:before {
   transform: translateX(22px);
 }
 
-/* --- BOTONES DE ACCIÓN --- */
+/* === BOTONES DE ACCIÓN CON TOOLTIP === */
 .action-btn {
   position: relative;
   padding: 10px;
-  margin: 0 5px;
+  margin: 0 6px;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   cursor: pointer;
   color: white;
-  transition: all 0.3s ease;
+  transition: all 0.25s ease;
   font-size: 18px;
+  background: linear-gradient(145deg, #344955, #263D42);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
 }
+
+/* Hover visual */
+.action-btn:hover {
+  transform: scale(1.12) translateY(-2px);
+  opacity: 0.95;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Tooltip */
+.action-btn::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 135%;
+  left: 50%;
+  transform: translateX(-50%) translateY(6px);
+  background: rgba(38, 61, 66, 0.95);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 10px rgba(99, 199, 178, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+}
+
+/* Triángulo */
+.action-btn::before {
+  content: "";
+  position: absolute;
+  bottom: 122%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: rgba(38, 61, 66, 0.95) transparent transparent transparent;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: 999;
+}
+
+/* Mostrar tooltip */
+.action-btn:hover::after,
+.action-btn:hover::before {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-4px);
+}
+
+/* Colores por acción */
+.edit-btn {
+  background: linear-gradient(145deg, #8E6C88, #a17ca1);
+}
+.edit-btn:hover {
+  background: linear-gradient(145deg, #b48cb3, #c8a7c7);
+}
+
+.delete-btn {
+  background: linear-gradient(145deg, #d67070, #c94b4b);
+}
+.delete-btn:hover {
+  background: linear-gradient(145deg, #e58989, #d25757);
+}
+
+.send-btn {
+  background: linear-gradient(145deg, #7dd3b0, #4ca78f);
+}
+.send-btn:hover {
+  background: linear-gradient(145deg, #9de1c3, #5bc2a5);
+}
+
+.action-btn:hover i {
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.4));
+}
+
 td.center .action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   margin: 0 4px;
   vertical-align: middle;
-}
-
-/* Hover general */
-.action-btn:hover {
-  transform: scale(1.12);
-  opacity: 0.9;
-}
-
-/* Colores por acción */
-.edit-btn {
-  background-color: #8E6C88; /* azul */
-}
-.edit-btn:hover {
-  background-color: #b18caa;
-}
-
-.delete-btn {
-  background-color: #d67070; /* rojo */
-}
-.delete-btn:hover {
-  background-color: #c76969;
-}
-
-.send-btn {
-  background-color: #8ccfc2; /* verde brillante */
-  box-shadow: 0 0 6px rgba(0, 184, 148, 0.5);
-}
-.send-btn:hover {
-  background-color: #6aada1;
-  box-shadow: 0 0 10px rgba(0, 184, 148, 0.7);
-}
-
-/* --- TOOLTIP PERSONALIZADO --- */
-.action-btn::after {
-  content: attr(title);
-  position: absolute;
-  bottom: 130%;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(0, 0, 0, 0.85);
-  color: white;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-
-/* Triángulo inferior del tooltip */
-.action-btn::before {
-  content: '';
-  position: absolute;
-  bottom: 120%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 5px;
-  border-style: solid;
-  border-color: #000 transparent transparent transparent;
-  opacity: 0;
-  transition: opacity 0.25s ease;
-}
-
-/* Mostrar tooltip al pasar el mouse */
-.action-btn:hover::after,
-.action-btn:hover::before {
-  opacity: 1;
-  transform: translateX(-50%) translateY(-4px);
-  z-index: 10;
 }
 
 /* === BADGES DE ROLES === */
@@ -1104,32 +1113,26 @@ td.center .action-btn {
   text-transform: capitalize;
 }
 
-/* ✅ Colores específicos primero (con prioridad alta) */
 ::v-deep(.role-estudiante) {
-  background-color: #7cb97c !important; /* verde */
+  background-color: #7cb97c !important;
   color: white !important;
 }
-
 ::v-deep(.role-director) {
-  background-color: #74abdb !important; /* azul */
+  background-color: #74abdb !important;
   color: white !important;
 }
-
 ::v-deep(.role-administrador) {
-  background-color: #a5809e !important; /* violeta oscuro */
+  background-color: #a5809e !important;
   color: white !important;
 }
-
 ::v-deep(.role-seguridad) {
-  background-color: #da726e !important; /* rojo */
+  background-color: #da726e !important;
   color: white !important;
 }
-
 ::v-deep(.badge[class*="role-"]:not(.role-estudiante):not(.role-administrador):not(.role-director):not(.role-seguridad)) {
   background-color: #d196d3 !important; 
   color: white !important;
 }
-
 
 .edit-input {
   width: 100%;
@@ -1138,23 +1141,17 @@ td.center .action-btn {
   border-radius: 5px;
   font-size: 13px;
 }
-
 .edit-name {
   display: flex;
   gap: 6px;
 }
-
-.edit-input.small {
-  width: 48%;
-}
-
+.edit-input.small { width: 48%; }
 .edit-input:focus {
   outline: none;
   border-color: #83cabb;
   box-shadow: 0 0 2px #83cabb;
 }
 
-/* --- Dropdown compacto para roles --- */
 .role-select {
   padding: 4px 8px;
   border: 1px solid #ccc;
@@ -1164,7 +1161,6 @@ td.center .action-btn {
   cursor: pointer;
 }
 
-/* --- Popup para edición de accesos   --- */
 .flex-access {
   display: flex;
   justify-content: space-between;
@@ -1175,7 +1171,6 @@ td.center .action-btn {
   padding: 6px;
   font-size: 14px;
 }
-
 
 /* === ANIMACIÓN DE CARGA === */
 .loading-overlay {
@@ -1190,13 +1185,11 @@ td.center .action-btn {
   align-items: center;
   z-index: 9999;
 }
-
 .container {
   display: flex;
   justify-content: center;
   gap: 10px;
 }
-
 .ball {
   width: 50px;
   height: 50px;
@@ -1204,34 +1197,14 @@ td.center .action-btn {
   animation: wave 1.5s ease-in-out infinite;
   background-color: #6eca84;
 }
-
-.ball:nth-child(2) {
-  animation-delay: -0.2s;
-  background-color: #7ed1b7;
-}
-
-.ball:nth-child(3) {
-  animation-delay: -0.4s;
-  background-color: #75c6cc;
-}
-
-.ball:nth-child(4) {
-  animation-delay: -0.6s;
-  background-color: #65a9d3;
-}
-
-.ball:nth-child(5) {
-  animation-delay: -0.8s;
-  background-color: #8e72c0;
-}
+.ball:nth-child(2) { animation-delay: -0.2s; background-color: #7ed1b7; }
+.ball:nth-child(3) { animation-delay: -0.4s; background-color: #75c6cc; }
+.ball:nth-child(4) { animation-delay: -0.6s; background-color: #65a9d3; }
+.ball:nth-child(5) { animation-delay: -0.8s; background-color: #8e72c0; }
 
 @keyframes wave {
-  0%, 100% {
-    transform: translateY(30px);
-  }
-  50% {
-    transform: translateY(-30px);
-  }
+  0%, 100% { transform: translateY(30px); }
+  50% { transform: translateY(-30px); }
 }
 
 .table-wrap table {
@@ -1239,15 +1212,12 @@ td.center .action-btn {
   border-collapse: collapse;
   table-layout: fixed;
 }
-
-.table-wrap th,
-.table-wrap td {
+.table-wrap th, .table-wrap td {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
 }
-
 .edit-input {
   width: 100%;
   height: 30px;
@@ -1258,36 +1228,25 @@ td.center .action-btn {
   font-size: 14px;
   line-height: 1.2;
 }
+.table-wrap { overflow-y: auto; max-height: 70vh; }
 
-.table-wrap {
-  overflow-y: auto;
-  max-height: 70vh;
-}
-
-.col-accesos .flex-access {
-  display: flex;
-  gap: 8px;
-  align-items: flex-start; 
-}
-
-.col-accesos .flex-access > span{
+.col-accesos .flex-access { display: flex; gap: 8px; align-items: flex-start; }
+.col-accesos .flex-access > span {
   white-space: normal;
   word-break: break-word;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;   
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  line-clamp: 2;
-  box-orient: vertical;
+  display: box; /* fallback opcional */
   line-height: 1.25;
   max-height: calc(1.25em * 2);
 }
-
 .col-accesos .action-btn.small {
-  flex: 0 0 auto;            
-  align-self: flex-start;     
+  flex: 0 0 auto;
+  align-self: flex-start;
 }
-
 </style>
+
 
