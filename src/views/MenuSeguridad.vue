@@ -220,6 +220,7 @@
                   <td>{{ cfg.usuarioModificacion }}</td>
                   <td>
                     <button @click="loadIntoForm(cfg)" class="btn-load">Cargar</button>
+                    <button @click="deleteConfiguration(cfg)" class="btn-delete" :disabled="cfg.activa">Eliminar</button>
                   </td>
                 </tr>
               </tbody>
@@ -345,6 +346,72 @@ export default {
       this.showPasswordConfig = true;
       // Scroll to top of form
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    async deleteConfiguration(config) {
+      if (!config) return;
+
+      // Prevent deletion of active configuration
+      if (config.activa) {
+        await Swal.fire({
+          icon: 'warning',
+          title: 'No se puede eliminar',
+          text: 'No se puede eliminar la configuración activa. Primero active otra configuración.',
+        });
+        return;
+      }
+
+      // Confirm deletion
+      const result = await Swal.fire({
+        title: '¿Está seguro?',
+        text: `¿Desea eliminar la configuración ID ${config.idConfig}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      });
+
+      if (!result.isConfirmed) return;
+
+      try {
+        const token = localStorage.getItem('authToken');
+        const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+        const backend = await getBackendUrl();
+        const response = await this.$publicAxios.delete(`${backend}/configuracion-seguridad/${config.idConfig}`, {
+          headers
+        });
+
+        if (response.data && response.data.status === '200 OK') {
+          await Swal.fire({
+            icon: 'success',
+            title: 'Configuración Eliminada',
+            text: 'La configuración se ha eliminado exitosamente.',
+          });
+
+          // Reload configurations list
+          await this.loadAllConfigurations();
+        }
+      } catch (error) {
+        console.error('Error deleting configuration:', error);
+        let errorMessage = 'Error al eliminar la configuración.';
+
+        if (error.response?.status === 404) {
+          errorMessage = 'Configuración no encontrada.';
+        } else if (error.response?.status === 409) {
+          errorMessage = 'No se puede eliminar la configuración activa.';
+        } else if (error.response?.data?.message) {
+          errorMessage = error.response.data.message;
+        }
+
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: errorMessage
+        });
+      }
     },
 
     async saveConfiguration() {
@@ -746,8 +813,24 @@ footer {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  margin-right: 5px;
 }
 .btn-load:hover { background: #0069d9; }
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-delete:hover { background: #c82333; }
+.btn-delete:disabled { 
+  background: #6c757d; 
+  cursor: not-allowed; 
+  opacity: 0.6; 
+}
 
 /* Responsive */
 @media screen and (max-width: 700px) {
