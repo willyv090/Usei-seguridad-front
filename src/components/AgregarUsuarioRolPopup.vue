@@ -40,12 +40,24 @@
 
               <div class="form-group">
                 <label for="nombre">Nombre</label>
-                <input id="nombre" v-model="form.nombre" type="text" required />
+                <input
+                  id="nombre"
+                  v-model="form.nombre"
+                  type="text"
+                  required
+                  @input="normalizarNombreYApellido"
+                />
               </div>
 
               <div class="form-group">
                 <label for="apellido">Apellido</label>
-                <input id="apellido" v-model="form.apellido" type="text" required />
+                <input
+                  id="apellido"
+                  v-model="form.apellido"
+                  type="text"
+                  required
+                  @input="normalizarNombreYApellido"
+                />
               </div>
 
               <div class="form-group correo-group">
@@ -94,7 +106,7 @@
         <!-- STEP 2 -->
         <div v-else-if="step === 2" class="step step-scrollable">
           <form @submit.prevent>
-            <!-- 🔹 Si es modo usuarios -->
+            <!-- modo usuarios -->
             <template v-if="mode==='usuarios'">
               <div class="form-group">
                 <label for="telefono">Teléfono</label>
@@ -354,6 +366,19 @@ export default {
           this.tooltipMensaje = "";
         }
       },
+      capitalizarPalabras(texto) {
+        if (!texto) return '';
+        return texto
+          .toLowerCase()
+          .replace(/(?:^|\s|-|')[a-z]/g, l => l.toUpperCase()) // Mayúscula después de espacio, guion o apóstrofe
+          .replace(/\s+/g, ' ')
+          .trim();
+      },
+
+      normalizarNombreYApellido() {
+          this.form.nombre = this.capitalizarPalabras(this.form.nombre?.trim());
+          this.form.apellido = this.capitalizarPalabras(this.form.apellido?.trim());
+        },
 
     submitForm() {
       // Validar CI secuencial 

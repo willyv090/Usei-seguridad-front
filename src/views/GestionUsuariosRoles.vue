@@ -733,21 +733,24 @@ export default {
 
 
     async handleGuardarNuevo(payload) {
+      this.loading = true; 
+
       try {
         if (this.currentTab === 'usuarios') {
-            if (!payload.correo || payload.correo.trim() === '') {
-              Swal.fire('Advertencia', 'Debe ingresar un correo válido para enviar las credenciales.', 'warning');
-              return;
-            }
-            // Validar CI secuencial
-            if (this.esSecuencial(payload.ci)) {
-              Swal.fire({
-                icon: 'warning',
-                title: 'CI inválido',
-                text: 'El número de Cédula no debe contener secuencias numéricas consecutivas como 12345 o 98765.'
-              });
-              return;
-            }
+          if (!payload.correo || payload.correo.trim() === '') {
+            Swal.fire('Advertencia', 'Debe ingresar un correo válido para enviar las credenciales.', 'warning');
+            return;
+          }
+
+          // Validar CI secuencial
+          if (this.esSecuencial(payload.ci)) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'CI inválido',
+              text: 'El número de Cédula no debe contener secuencias numéricas consecutivas (como 12345 o 98765).'
+            });
+            return;
+          }
 
           await axios.post(`${BASE_URL}/usuario`, payload, {
             headers: { 'Content-Type': 'application/json' }
@@ -767,11 +770,10 @@ export default {
           });
         } 
         
-        // 🔹 Nueva parte: creación de ROL
+        // 🔹 Creación de ROL
         else if (this.currentTab === 'roles') {
-          // Asegurarnos que accesos sea string, no array
           const accesosString = Array.isArray(payload.accesos)
-            ? payload.accesos.join(',')   // convierte ["usuarios", "reportes"] → "usuarios,reportes"
+            ? payload.accesos.join(',')
             : payload.accesos || '';
 
           const rolPayload = {
@@ -795,10 +797,13 @@ export default {
         this.showPopup = false;
         await Promise.all([this.fetchData(this.currentPage), this.fetchAllRoles()]);
         Swal.fire('Éxito', 'Registro creado correctamente.', 'success');
+
       } catch (e) {
         console.error('❌ Error al guardar rol o usuario:', e.response?.data || e.message);
         const msg = e?.response?.data ?? 'No se pudo crear el registro.';
         Swal.fire('Error', String(msg), 'error');
+      } finally {
+        this.loading = false; // 🔹 Ocultar animación de carga al terminar
       }
     },
 
@@ -1239,7 +1244,7 @@ td.center .action-btn {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  display: box; /* fallback opcional */
+  line-clamp: 2;
   line-height: 1.25;
   max-height: calc(1.25em * 2);
 }
