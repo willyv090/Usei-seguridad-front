@@ -843,14 +843,26 @@ export default {
         Swal.fire('Eliminado', 'Se eliminó correctamente.', 'success');
       } catch (e) {
         console.error('Error al eliminar:', e);
-        const msg = e?.response?.data ?? 'No se pudo eliminar.';
-        Swal.fire('Error', String(msg), 'error');
+
+        // 🔹 Detectar si es un error de restricción de clave foránea
+        const backendMsg = e?.response?.data || '';
+        if (
+          backendMsg.includes('violates foreign key constraint') ||
+          backendMsg.includes('referenced from table "usuario"')
+        ) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Rol en uso',
+            text: 'No se puede eliminar este rol porque está siendo usado por uno o más usuarios.',
+            confirmButtonColor: '#83cabb',
+          });
+          return;
+        }
+
+        // 🔹 Cualquier otro error
+        Swal.fire('Error', 'No se pudo eliminar el registro.', 'error');
       }
     },
-    activarEdicion() {
-    this.editMode = true;
-    this.backupRows = JSON.parse(JSON.stringify(this.rows));
-  },
 
   cancelarEdicion() {
     this.editMode = false;
