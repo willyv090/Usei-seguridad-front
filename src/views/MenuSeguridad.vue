@@ -183,6 +183,9 @@
                   <td>{{ cfg.usuarioModificacion }}</td>
                   <td>
                     <button @click="loadIntoForm(cfg)" class="btn-load">Cargar</button>
+                    <button @click="deleteConfiguration(cfg.idConfig)" class="btn-delete" :disabled="cfg.activa">
+                      Eliminar
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -307,6 +310,47 @@ export default {
       this.showPasswordConfig = true;
       // Scroll to top of form
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    async deleteConfiguration(configId) {
+      try {
+        const result = await Swal.fire({
+          title: '¿Está seguro?',
+          text: 'Esta acción eliminará permanentemente la configuración seleccionada.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar'
+        });
+
+        if (result.isConfirmed) {
+          const token = localStorage.getItem('authToken');
+          const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+          
+          const backend = await getBackendUrl();
+          await this.$publicAxios.delete(`${backend}/configuracion-seguridad/${configId}`, { headers });
+          
+          await Swal.fire({
+            icon: 'success',
+            title: 'Eliminado',
+            text: 'La configuración ha sido eliminada exitosamente.',
+            confirmButtonText: 'Aceptar'
+          });
+          
+          // Reload configurations
+          await this.loadAllConfigurations();
+        }
+      } catch (error) {
+        console.error('Error deleting configuration:', error);
+        await Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo eliminar la configuración. Inténtelo nuevamente.',
+          confirmButtonText: 'Aceptar'
+        });
+      }
     },
 
     async saveConfiguration() {
@@ -708,8 +752,23 @@ footer {
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  margin-right: 5px;
 }
 .btn-load:hover { background: #0069d9; }
+
+.btn-delete {
+  background: #dc3545;
+  color: white;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.btn-delete:hover { background: #c82333; }
+.btn-delete:disabled { 
+  background: #6c757d; 
+  cursor: not-allowed; 
+}
 
 /* Responsive */
 @media screen and (max-width: 700px) {
