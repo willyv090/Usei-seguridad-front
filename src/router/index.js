@@ -29,6 +29,7 @@ import CrearReporteDirector from '@/views/CrearReporteDirector.vue'
 import EstadoEstudiante from '@/views/EstadoEstudiante.vue'
 import MenuSeguridad from '@/views/MenuSeguridad.vue'
 import GestionUsuariosRoles from '@/views/GestionUsuariosRoles.vue'
+import LogUsuario from '@/views/LogUsuario.vue'
 
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -222,6 +223,12 @@ const router = createRouter({
       name: 'GestionUsuariosRoles',
       component: GestionUsuariosRoles,
       meta: { requiresAuth: true, accessKey: 'Gestión de usuarios y roles' }
+    },
+    {
+      path: '/log-usuario',
+      name: 'LogUsuario',
+      component: LogUsuario,
+      //meta: { requiresAuth: true, accessKey: 'Log Usuario' }
     },
   ],
   scrollBehavior(to, from, savedPosition) {
