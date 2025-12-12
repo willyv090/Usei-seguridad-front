@@ -416,12 +416,27 @@ export default {
       const dt = this.toDate(value);
       if (!dt) return value ? String(value) : '';
       return dt.toLocaleString();
-    }
+    },
+    async registrarAccesoVistaLogsUnaVez() {
+      const key = 'USEI_LOGS_VIEW_LOGGED';
+
+      // 1 vez por pestaña/sesión
+      if (sessionStorage.getItem(key) === 'true') return;
+
+      try {
+        await this.$protectedAxios.post(`${BASE_URL}/log-usuario/auditoria/acceso`);
+        sessionStorage.setItem(key, 'true');
+      } catch (e) {
+        // No bloquea la carga de datos si falla el audit
+        console.warn('No se pudo registrar acceso a logs:', e?.response?.status, e?.response?.data);
+      }
+    },
   },
   mounted() {
-    this.userRole = localStorage.getItem('rol') || '';
-    this.fetchLogs();
-  }
+  this.userRole = localStorage.getItem('rol') || '';
+  this.registrarAccesoVistaLogsUnaVez();
+  this.fetchLogs();
+}
 };
 </script>
 

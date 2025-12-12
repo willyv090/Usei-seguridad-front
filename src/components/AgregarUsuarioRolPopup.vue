@@ -25,18 +25,18 @@
           <form @submit.prevent>
             <template v-if="mode==='usuarios'">
               <div class="form-group ci-group">
-            <label for="ci">Cédula de Identidad</label>
-            <input
-              id="ci"
-              v-model="form.ci"
-              type="text"
-              required
-              :class="{ 'input-error': ciSecuencial }"
-            />
-            <small v-if="ciSecuencial" class="tooltip-error">
-              El CI no debe contener secuencias numéricas consecutivas (como 12345 o 98765)
-            </small>
-          </div>
+                <label for="ci">Cédula de Identidad</label>
+                <input
+                  id="ci"
+                  v-model="form.ci"
+                  type="text"
+                  required
+                  :class="{ 'input-error': ciSecuencial }"
+                />
+                <small v-if="ciSecuencial" class="tooltip-error">
+                  El CI no debe contener secuencias numéricas consecutivas (como 12345 o 98765)
+                </small>
+              </div>
 
               <div class="form-group">
                 <label for="nombre">Nombre</label>
@@ -206,29 +206,30 @@ export default {
   },
 
   data() {
-  return {
-    correoInvalido: false,
-    step: 1,
-    ciSecuencial: false,
-    showPassword: false,
-    tooltipMensaje: "", // ⚠️ texto del tooltip dinámico
-    form: this.mode === 'usuarios'
-      ? {
-          ci: '',
-          nombre: '',
-          apellido: '',
-          correo: '',
-          telefono: '',
-          carrera: '',
-          idRol: ''
-        }
-      : {
-          idRol: null,
-          nombreRol: '',
-          activo: true,
-          accesos: []
-        },
-      // Lista de todos los modulos disponibles del sistema
+    return {
+      correoInvalido: false,
+      step: 1,
+      ciSecuencial: false,
+      showPassword: false,
+      tooltipMensaje: "",
+      form: this.mode === 'usuarios'
+        ? {
+            ci: '',
+            nombre: '',
+            apellido: '',
+            correo: '',
+            telefono: '',
+            carrera: '',
+            idRol: ''
+          }
+        : {
+            idRol: null,
+            nombreRol: '',
+            activo: true,
+            accesos: []
+          },
+
+      // ✅ Lista de módulos disponibles del sistema
       modulosDisponibles: [
         'Encuesta de Graduación',
         'Certificados',
@@ -248,7 +249,10 @@ export default {
         'Certificados de estudiantes',
         'Gestión de usuarios y roles',
         'Gestión de contraseñas',
-        'Análisis de riesgos'
+        'Análisis de riesgos',
+
+        // ✅ NUEVO: módulo para ver logs
+        'Revisión de Logs'
       ]
     };
   },
@@ -262,7 +266,7 @@ export default {
       Correo: ${f.correo}
       Teléfono: ${f.telefono}
       Carrera: ${f.carrera}
-      Rol: ${rolNombre}`; //  Cambiado
+      Rol: ${rolNombre}`;
     },
     resumenRol() {
       const f = this.form;
@@ -300,15 +304,17 @@ export default {
       }
       return false;
     },
+
     watch: {
-        'form.ci'(nuevo) {
-          this.ciSecuencial = this.esSecuencial(nuevo.trim());
-        },
-        'form.correo'(nuevo) {
-          const emailRegex = /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/;
-          this.correoInvalido = nuevo.trim() !== '' && !emailRegex.test(nuevo.trim());
-        }
+      'form.ci'(nuevo) {
+        this.ciSecuencial = this.esSecuencial(nuevo.trim());
       },
+      'form.correo'(nuevo) {
+        const emailRegex = /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/;
+        this.correoInvalido = nuevo.trim() !== '' && !emailRegex.test(nuevo.trim());
+      }
+    },
+
     toggleAcceso(mod) {
       if (this.form.accesos.includes(mod)) {
         this.form.accesos = this.form.accesos.filter(a => a !== mod);
@@ -318,29 +324,29 @@ export default {
     },
 
     goToStep(num) {
-      // Validacion del CI secuencial
-        if (this.esSecuencial(this.form.ci)) {
-          this.ciSecuencial = true;
-          return swal.fire({
-            icon: 'warning',
-            title: 'CI inválido',
-            text: 'El número de Cédula no debe contener secuencias numéricas consecutivas (como 12345 o 98765).'
-          });
-        }
+      if (this.esSecuencial(this.form.ci)) {
+        this.ciSecuencial = true;
+        return swal.fire({
+          icon: 'warning',
+          title: 'CI inválido',
+          text: 'El número de Cédula no debe contener secuencias numéricas consecutivas (como 12345 o 98765).'
+        });
+      }
+
       if (num === 2 && this.step === 1) {
         if (this.mode === 'usuarios') {
           if (!this.form.ci || !this.form.nombre || !this.form.apellido || !this.form.correo) {
             return swal.fire({ icon: 'warning', title: 'Completa los campos del paso 1.' });
           }
           const emailRegex = /^[\w.-]+@[\w.-]+\.[a-zA-Z]{2,}$/;
-            if (!emailRegex.test(this.form.correo.trim())) {
-              this.correoInvalido = true;
-              return swal.fire({
-                icon: 'warning',
-                title: 'Correo inválido',
-                text: 'Por favor ingresa un correo con formato válido (usuario@ucb.edu.bo).'
-              });
-            }
+          if (!emailRegex.test(this.form.correo.trim())) {
+            this.correoInvalido = true;
+            return swal.fire({
+              icon: 'warning',
+              title: 'Correo inválido',
+              text: 'Por favor ingresa un correo con formato válido (usuario@ucb.edu.bo).'
+            });
+          }
         } else if (this.mode === 'roles') {
           if (!this.form.nombreRol || !this.form.nombreRol.trim()) {
             return swal.fire({ icon: 'warning', title: 'El nombre del rol es obligatorio.' });
@@ -349,73 +355,74 @@ export default {
       }
       this.step = num;
     },
+
     normalizarNombreRol() {
       if (!this.form.nombreRol) return;
-      // Primera mayúscula, resto minúsculas
       this.form.nombreRol = this.form.nombreRol
         .replace(/\s+/g, ' ')
         .trim()
         .charAt(0)
         .toUpperCase() + this.form.nombreRol.slice(1).toLowerCase();
       this.tooltipMensaje = "";
-  },
-    verificarAbreviacion() {
-        const texto = this.form.nombreRol.trim().toLowerCase();
-        const abreviaciones = ['admin', 'adm', 'dir', 'est', 'pas', 'sec'];
-        if (abreviaciones.includes(texto)) {
-          this.tooltipMensaje = "⚠️ Usa el nombre completo (por ejemplo, 'Administrador', 'Director', 'Pasantia 2').";
-        } else {
-          this.tooltipMensaje = "";
-        }
-      },
-      capitalizarPalabras(texto) {
-        if (!texto) return '';
-        return texto
-          .toLowerCase()
-          .replace(/(?:^|\s|-|')[a-z]/g, l => l.toUpperCase()) // Mayúscula después de espacio, guion o apóstrofe
-          .replace(/\s+/g, ' ')
-          .trim();
-      },
+    },
 
-      normalizarNombreYApellido() {
-          this.form.nombre = this.capitalizarPalabras(this.form.nombre?.trim());
-          this.form.apellido = this.capitalizarPalabras(this.form.apellido?.trim());
-        },
+    verificarAbreviacion() {
+      const texto = this.form.nombreRol.trim().toLowerCase();
+      const abreviaciones = ['admin', 'adm', 'dir', 'est', 'pas', 'sec'];
+      if (abreviaciones.includes(texto)) {
+        this.tooltipMensaje = "⚠️ Usa el nombre completo (por ejemplo, 'Administrador', 'Director', 'Pasantia 2').";
+      } else {
+        this.tooltipMensaje = "";
+      }
+    },
+
+    capitalizarPalabras(texto) {
+      if (!texto) return '';
+      return texto
+        .toLowerCase()
+        .replace(/(?:^|\s|-|')[a-z]/g, l => l.toUpperCase())
+        .replace(/\s+/g, ' ')
+        .trim();
+    },
+
+    normalizarNombreYApellido() {
+      this.form.nombre = this.capitalizarPalabras(this.form.nombre?.trim());
+      this.form.apellido = this.capitalizarPalabras(this.form.apellido?.trim());
+    },
 
     submitForm() {
-      // Validar CI secuencial 
-          if (this.esSecuencial(this.form.ci)) {
-            this.ciSecuencial = true;
-            return swal.fire({
-              icon: 'warning',
-              title: 'CI inválido',
-              text: 'El número de Cédula no debe contener secuencias numéricas consecutivas (como 12345 o 98765).'
-            });
-          }
-        if (this.mode === 'usuarios') {
-          const required = ['ci', 'nombre', 'apellido', 'correo', 'idRol'];
-          if (required.some(k => !String(this.form[k] || '').trim())) {
-            return swal.fire({ icon: 'warning', title: 'Completa todos los obligatorios.' });
-          }
-        } else if (this.mode === 'roles') {
-          if (!this.form.nombreRol || !this.form.nombreRol.trim()) {
-            return swal.fire({ icon: 'warning', title: 'El nombre del rol es obligatorio.' });
-          }
+      if (this.esSecuencial(this.form.ci)) {
+        this.ciSecuencial = true;
+        return swal.fire({
+          icon: 'warning',
+          title: 'CI inválido',
+          text: 'El número de Cédula no debe contener secuencias numéricas consecutivas (como 12345 o 98765).'
+        });
+      }
 
-          this.verificarAbreviacion();
-          if (this.tooltipMensaje) {
-            return swal.fire({
-              icon: 'warning',
-              title: 'Nombre de rol no válido',
-              text: this.tooltipMensaje
-            });
-          }
+      if (this.mode === 'usuarios') {
+        const required = ['ci', 'nombre', 'apellido', 'correo', 'idRol'];
+        if (required.some(k => !String(this.form[k] || '').trim())) {
+          return swal.fire({ icon: 'warning', title: 'Completa todos los obligatorios.' });
+        }
+      } else if (this.mode === 'roles') {
+        if (!this.form.nombreRol || !this.form.nombreRol.trim()) {
+          return swal.fire({ icon: 'warning', title: 'El nombre del rol es obligatorio.' });
         }
 
-        this.$emit('guardar', { ...this.form });
-        this.$emit('close');
-      },
+        this.verificarAbreviacion();
+        if (this.tooltipMensaje) {
+          return swal.fire({
+            icon: 'warning',
+            title: 'Nombre de rol no válido',
+            text: this.tooltipMensaje
+          });
+        }
+      }
 
+      this.$emit('guardar', { ...this.form });
+      this.$emit('close');
+    },
   }
 }
 </script>
@@ -589,5 +596,4 @@ input, select, textarea {
 .ci-group .tooltip-error {
   margin-top: 6px;
 }
-
 </style>

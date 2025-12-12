@@ -164,7 +164,7 @@ export const MENU_CARDS = {
     id: "usuarios-roles",
     title: "Gestión de usuarios y roles",
     description: "Administra roles, permisos y usuarios del sistema.",
-    icon: new URL("@/components/images/directores.png", import.meta.url).href,
+    icon: new URL("@/components/images/usuarios-roles.png", import.meta.url).href,
     route: "/gestion-usuarios-roles",
     accessKey: "Gestión de usuarios y roles",
   },
@@ -174,7 +174,7 @@ export const MENU_CARDS = {
     id: "contrasenas",
     title: "Gestión de contraseñas",
     description: "Revisa políticas y gestiona contraseñas del sistema.",
-    icon: new URL("@/components/images/technical-service.png", import.meta.url).href,
+    icon: new URL("@/components/images/contraseñas.png", import.meta.url).href,
     route: "/menu-seguridad",
     accessKey: "Gestión de contraseñas",
   },
@@ -184,8 +184,18 @@ export const MENU_CARDS = {
     id: "analisis-riesgos",
     title: "Análisis de riesgos",
     description: "Gestiona y analiza riesgos de seguridad de información.",
-    icon: new URL("@/components/images/technical-service.png", import.meta.url).href,
+    icon: new URL("@/components/images/analisis-riesgos.png", import.meta.url).href,
     route: "/analisis-riesgos",
     accessKey: "Análisis de riesgos",
+  },
+
+  // ===  ANÁLISIS DE RIESGOS ===
+  "Revisión de Logs": {
+    id: "revision-logs",
+    title: "Revisión de Logs",
+    description: "Revisa y monitorea los logs de actividad del sistema.",
+    icon: new URL("@/components/images/logs.png", import.meta.url).href,
+    route: "/log-usuario",
+    accessKey: "Revisión de Logs",
   },
 };
