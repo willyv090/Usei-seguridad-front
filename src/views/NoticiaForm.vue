@@ -28,6 +28,7 @@
                 Imagen actual: {{ currentNoticia.img }}
               </div>
             </div>
+
             <div class="form-group">
               <label for="estado">Estado</label>
               <select v-model="currentNoticia.estado" id="estado" required>
@@ -57,24 +58,17 @@
           <h2>Noticias Existentes</h2>
 
           <div class="filter-sort-container">
-            <!-- Filtro por título o descripción -->
             <input type="text" v-model="filterTerm" placeholder="Buscar por título o descripción..." @input="fetchNoticias(1)" />
-            
-            <!-- Filtro por estado -->
             <select v-model="selectedStatus" @change="fetchNoticias(1)">
               <option value="">Todos los estados</option>
               <option value="publicado">Publicado</option>
               <option value="en revision">En Revisión</option>
             </select>
-
-            <!-- Selección de cantidad de elementos por página -->
             <select v-model="perPage" @change="fetchNoticias(1)">
               <option value="5">5</option>
               <option value="10">10</option>
               <option value="20">20</option>
             </select>
-            
-            <!-- Botón para seleccionar orden ascendente/descendente -->
             <button class="sort-button" @click="toggleSortDirection">
               <i :class="sortDirection === 'asc' ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'"></i>
             </button>
@@ -90,7 +84,6 @@
             </div>
           </div>
 
-          <!-- Tabla con scroll bar -->
           <div class="scrollable-table">
             <table class="noticias-table">
               <thead>
@@ -125,6 +118,7 @@
               </tbody>
             </table>
           </div>
+
           <PaginationComponent
             :page-count="totalPages"
             :current-page="currentPage"
@@ -132,7 +126,6 @@
           />
         </div>
 
-        <!-- Modal para Noticias Archivadas -->
         <div v-if="showArchivedModal" class="modal">
           <div class="modal-content">
             <span class="close" @click="showArchivedModal = false">&times;</span>
@@ -161,7 +154,11 @@
                 </tr>
               </tbody>
             </table>
-            <PaginationComponent :page-count="totalArchivedPages" :current-page="currentArchivedPage" @page-changed="handleArchivedPageClick" />
+            <PaginationComponent
+              :page-count="totalArchivedPages"
+              :current-page="currentArchivedPage"
+              @page-changed="handleArchivedPageClick"
+            />
           </div>
         </div>
       </div>
@@ -172,47 +169,40 @@
 </template>
 
 <script>
-import Swal from 'sweetalert2';
-import NavBar from '@/components/NavBar.vue';
-import FooterComponent from '@/components/FooterComponent.vue';
-import PaginationComponent from '@/components/PaginationComponent.vue';
-import { BASE_URL } from '@/config/globals';
+import Swal from "sweetalert2";
+import NavBar from "@/components/NavBar.vue";
+import FooterComponent from "@/components/FooterComponent.vue";
+import PaginationComponent from "@/components/PaginationComponent.vue";
+import { BASE_URL } from "@/config/globals";
 
 export default {
-  name: 'NoticiaForm',
-  components: {
-    NavBar,
-    FooterComponent,
-    PaginationComponent,
-  },
+  name: "NoticiaForm",
+  components: { NavBar, FooterComponent, PaginationComponent },
   data() {
     return {
-      userRole: '',
+      userRole: "",
       noticias: [],
       noticiasArchivadas: [],
       currentNoticia: {
-        titulo: '',
-        descripcion: '',
+        titulo: "",
+        descripcion: "",
         img: null,
-        estado: 'publicado',
-        fechaModificado: new Date().toISOString(), 
+        estado: "publicado",
+        fechaModificado: new Date().toISOString(),
       },
       isEditing: false,
       editNoticiaId: null,
       showArchivedModal: false,
       showErrors: false,
-
-      // Parámetros para paginación, ordenación y filtro
       currentPage: 1,
       totalPages: 1,
-      perPage: 5, 
-      filterTerm: '',
-      sortBy: 'titulo', 
-      sortDirection: 'asc',
+      perPage: 5,
+      filterTerm: "",
+      sortBy: "titulo",
+      sortDirection: "asc",
       currentArchivedPage: 1,
       totalArchivedPages: 1,
-      selectedStatus: '',
-      // Estado de visibilidad de las columnas
+      selectedStatus: "",
       visibleColumns: {
         title: true,
         description: true,
@@ -225,8 +215,8 @@ export default {
   },
 
   mounted() {
-    this.userRole = localStorage.getItem('rol') || '';
-    const savedPage = localStorage.getItem('currentPage');
+    this.userRole = localStorage.getItem("rol") || "";
+    const savedPage = localStorage.getItem("currentPage");
     this.currentPage = savedPage ? parseInt(savedPage, 10) : 1;
     this.fetchNoticias(this.currentPage);
     this.fetchNoticiasArchivadas();
@@ -241,90 +231,91 @@ export default {
     },
     getColumnLabel(key) {
       const labels = {
-        title: 'Título',
-        description: 'Descripción',
-        estado: 'Estado',
-        fechaModificado: 'Fecha Modificado',
-        acciones: 'Acciones',
+        title: "Título",
+        description: "Descripción",
+        estado: "Estado",
+        fechaModificado: "Fecha Modificado",
+        acciones: "Acciones",
       };
       return labels[key];
     },
-    // Método para obtener noticias con paginación, filtro y ordenación
+
     async fetchNoticias(page = 1) {
-  this.currentPage = page; // Sincroniza la página seleccionada
-  try {
-    // Maneja el estado vacío como null
-    const estadoFilter = this.selectedStatus ? this.selectedStatus.trim().toLowerCase() : null; 
-    const filterTerm = this.filterTerm ? this.filterTerm.trim().toLowerCase() : null; // Normaliza el filtro de texto
+      this.currentPage = page;
+      try {
+        const estadoFilter = this.selectedStatus ? this.selectedStatus.trim().toLowerCase() : null;
+        const filterTerm = this.filterTerm ? this.filterTerm.trim().toLowerCase() : null;
 
-    const response = await this.$protectedAxios.get(`${BASE_URL}/noticia`, {
-      params: {
-        page: page - 1, // Ajuste para la paginación backend
-        size: this.perPage,
-        sortBy: this.sortBy,
-        sortDirection: this.sortDirection,
-        filter: filterTerm, // Enviar filtro general
-        estado: estadoFilter, // Enviar estado filtrado o null
-      },
-    });
+        const response = await this.$protectedAxios.get(`${BASE_URL}/noticia`, {
+          params: {
+            page,
+            size: this.perPage,
+            sortBy: this.sortBy,
+            sortDirection: this.sortDirection,
+            filter: filterTerm,
+            estado: estadoFilter,
+          },
+        });
 
-    this.noticias = response.data.content;
-    this.totalPages = response.data.totalPages;
-  } catch (error) {
-    console.error('Error al cargar las noticias:', error);
-  }
-},
+        this.noticias = response.data.content || [];
+        this.totalPages = response.data.totalPages || 1;
+      } catch (error) {
+        console.error("Error al cargar las noticias:", error);
+      }
+    },
 
-
-    // Método para obtener noticias archivadas
     async fetchNoticiasArchivadas(page = 1) {
       try {
         const response = await this.$protectedAxios.get(`${BASE_URL}/noticia/archivadas/paginadas`, {
           params: {
-            page: page - 1,
-            size: this.perPage, 
+            page,
+            size: this.perPage,
             sortBy: this.sortBy,
             sortDirection: this.sortDirection,
             filter: this.filterTerm,
           },
         });
-        this.noticiasArchivadas = response.data.content;
-        this.totalArchivedPages = response.data.totalPages;
+        this.noticiasArchivadas = response.data.content || [];
+        this.totalArchivedPages = response.data.totalPages || 1;
         this.currentArchivedPage = page;
       } catch (error) {
-        console.error('Error al cargar las noticias archivadas:', error);
+        console.error("Error al cargar las noticias archivadas:", error);
       }
     },
 
-    // Formatear fecha
+    getFormattedDate() {
+      const now = new Date();
+      return now
+        .toLocaleString("es-ES", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        })
+        .replace(/\//g, "-")
+        .replace(",", "");
+    },
+
     formatDate(fechaModificado, onlyDate = false) {
-      if (!fechaModificado) return 'Fecha no disponible';
-
+      if (!fechaModificado) return "Fecha no disponible";
       const date = new Date(fechaModificado);
-
-      if (isNaN(date.getTime())) {
-        return 'Fecha inválida';
-      }
-
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
+      if (isNaN(date.getTime())) return "Fecha inválida";
+      const day = String(date.getDate()).padStart(2, "0");
+      const month = String(date.getMonth() + 1).padStart(2, "0");
       const year = date.getFullYear();
-
-      if (onlyDate) {
-        return `${day}-${month}-${year}`; 
-      }
-
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-
-      return `${day}-${month}-${year} ${hours}:${minutes}`; 
+      if (onlyDate) return `${day}-${month}-${year}`;
+      const hours = String(date.getHours()).padStart(2, "0");
+      const minutes = String(date.getMinutes()).padStart(2, "0");
+      return `${day}-${month}-${year} ${hours}:${minutes}`;
     },
 
     handlePageClick(pageNumber) {
-    this.currentPage = pageNumber;
-    localStorage.setItem('currentPage', pageNumber); // Guarda la página actual
-    this.fetchNoticias(pageNumber);
-  },
+      this.currentPage = pageNumber;
+      localStorage.setItem("currentPage", pageNumber);
+      this.fetchNoticias(pageNumber);
+    },
     handleArchivedPageClick(pageNumber) {
       this.fetchNoticiasArchivadas(pageNumber);
     },
@@ -332,89 +323,77 @@ export default {
       this.currentNoticia.img = event.target.files[0];
     },
 
-    // Añadir nueva noticia
     async addNoticia() {
       if (!this.currentNoticia.titulo || !this.currentNoticia.img) {
-        Swal.fire({
-          title: 'Error',
-          text: 'El título y la imagen son obligatorios.',
-          icon: 'error',
-          confirmButtonText: 'Aceptar',
+        return Swal.fire({
+          title: "Error",
+          text: "El título y la imagen son obligatorios.",
+          icon: "error",
+          confirmButtonText: "Aceptar",
         });
-        return;
       }
 
       try {
         const formData = new FormData();
-        formData.append('titulo', this.currentNoticia.titulo);
-        formData.append('descripcion', this.currentNoticia.descripcion);
-        formData.append('img', this.currentNoticia.img);
-        formData.append('estado', this.currentNoticia.estado);
-
-        const formattedDate = this.formatDate(new Date());
-        formData.append('fechaModificado', formattedDate);
-        formData.append('UsuarioIdUsuario', 1);
+        formData.append("titulo", this.currentNoticia.titulo);
+        formData.append("descripcion", this.currentNoticia.descripcion);
+        formData.append("img", this.currentNoticia.img);
+        formData.append("estado", this.currentNoticia.estado);
+        formData.append("fechaModificado", this.getFormattedDate());
+        formData.append("UsuarioIdUsuario", 1);
 
         await this.$protectedAxios.post(`${BASE_URL}/noticia`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         });
 
         this.resetForm();
         this.fetchNoticias();
 
         Swal.fire({
-          title: 'Noticia Agregada',
-          text: 'La noticia se agregó correctamente.',
-          icon: 'success',
-          confirmButtonText: 'Aceptar',
+          title: "Noticia Agregada",
+          text: "La noticia se agregó correctamente.",
+          icon: "success",
+          confirmButtonText: "Aceptar",
         });
       } catch (error) {
         Swal.fire({
-          title: 'Error',
+          title: "Error",
           text: `Error al agregar noticia: ${error.response?.data?.message || error.message}`,
-          icon: 'error',
-          confirmButtonText: 'Aceptar',
+          icon: "error",
+          confirmButtonText: "Aceptar",
         });
       }
     },
 
-    // Actualizar una noticia existente
     async updateNoticia() {
       if (!this.currentNoticia.titulo) {
         Swal.fire({
-          title: 'Error',
-          text: 'El título es obligatorio.',
-          icon: 'error',
-          confirmButtonText: 'Aceptar',
+          title: "Error",
+          text: "El título es obligatorio.",
+          icon: "error",
+          confirmButtonText: "Aceptar",
         });
         return;
       }
 
       try {
         const formData = new FormData();
-        formData.append('titulo', this.currentNoticia.titulo);
-        formData.append('descripcion', this.currentNoticia.descripcion);
-
+        formData.append("titulo", this.currentNoticia.titulo);
+        formData.append("descripcion", this.currentNoticia.descripcion);
         if (this.currentNoticia.img) {
-          formData.append('img', this.currentNoticia.img);
+          formData.append("img", this.currentNoticia.img);
         }
-
-        const formattedDate = this.formatDate(new Date());
-        formData.append('fechaModificado', formattedDate);
-        formData.append('estado', this.currentNoticia.estado);
-        formData.append('UsuarioIdUsuario', 1);
+        formData.append("fechaModificado", this.getFormattedDate());
+        formData.append("estado", this.currentNoticia.estado);
+        formData.append("UsuarioIdUsuario", 1);
 
         if (!this.editNoticiaId) {
-          console.error('El ID de la noticia no está definido');
+          console.error("El ID de la noticia no está definido");
           return;
         }
 
         await this.$protectedAxios.put(`${BASE_URL}/noticia/${this.editNoticiaId}`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         });
 
         this.resetForm();
@@ -422,32 +401,31 @@ export default {
         this.fetchNoticias();
 
         Swal.fire({
-          title: 'Noticia Actualizada',
-          text: 'La noticia se actualizó correctamente.',
-          icon: 'success',
-          confirmButtonText: 'Aceptar',
+          title: "Noticia Actualizada",
+          text: "La noticia se actualizó correctamente.",
+          icon: "success",
+          confirmButtonText: "Aceptar",
         });
       } catch (error) {
         Swal.fire({
-          title: 'Error',
+          title: "Error",
           text: `Error al actualizar noticia: ${error.response?.data?.message || error.message}`,
-          icon: 'error',
-          confirmButtonText: 'Aceptar',
+          icon: "error",
+          confirmButtonText: "Aceptar",
         });
       }
     },
 
-    // Eliminar una noticia con confirmación
     confirmDeleteNoticia(idNoticia) {
       Swal.fire({
-        title: '¿Estás seguro?',
+        title: "¿Estás seguro?",
         text: "No podrás revertir esta acción.",
-        icon: 'warning',
+        icon: "warning",
         showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar",
       }).then((result) => {
         if (result.isConfirmed) {
           this.deleteNoticia(idNoticia);
@@ -455,125 +433,106 @@ export default {
       });
     },
 
-    // Eliminar una noticia
     async deleteNoticia(idNoticia) {
-      if (!idNoticia) {
-        console.error('El ID de la noticia no está definido.');
-        return;
-      }
+      if (!idNoticia) return console.error("El ID de la noticia no está definido.");
       try {
         await this.$protectedAxios.delete(`${BASE_URL}/noticia/${idNoticia}`);
         this.fetchNoticias();
         Swal.fire({
-          title: 'Noticia Eliminada',
-          text: 'La noticia ha sido eliminada correctamente.',
-          icon: 'success',
-          confirmButtonText: 'Aceptar',
+          title: "Noticia Eliminada",
+          text: "La noticia ha sido eliminada correctamente.",
+          icon: "success",
+          confirmButtonText: "Aceptar",
         });
       } catch (error) {
         Swal.fire({
-          title: 'Error',
+          title: "Error",
           text: `Error al eliminar noticia: ${error.response?.data?.message || error.message}`,
-          icon: 'error',
-          confirmButtonText: 'Aceptar',
+          icon: "error",
+          confirmButtonText: "Aceptar",
         });
       }
     },
 
-    // Archivar una noticia
     async archiveNoticia(idNoticia) {
-      if (!idNoticia) {
-        console.error('El ID de la noticia no está definido.');
-        return;
-      }
+      if (!idNoticia) return console.error("El ID de la noticia no está definido.");
       try {
         await this.$protectedAxios.put(`${BASE_URL}/noticia/archivado/${idNoticia}`);
         this.fetchNoticias();
         this.fetchNoticiasArchivadas();
 
         Swal.fire({
-          title: 'Noticia Archivada',
-          text: 'La noticia ha sido archivada correctamente.',
-          icon: 'success',
-          confirmButtonText: 'Aceptar',
+          title: "Noticia Archivada",
+          text: "La noticia ha sido archivada correctamente.",
+          icon: "success",
+          confirmButtonText: "Aceptar",
         });
       } catch (error) {
         Swal.fire({
-          title: 'Error',
+          title: "Error",
           text: `Error al archivar noticia: ${error.response?.data?.message || error.message}`,
-          icon: 'error',
-          confirmButtonText: 'Aceptar',
+          icon: "error",
+          confirmButtonText: "Aceptar",
         });
       }
     },
 
-    // Desarchivar una noticia
     async unarchiveNoticia(idNoticia) {
-      if (!idNoticia) {
-        console.error('El ID de la noticia no está definido.');
-        return;
-      }
+      if (!idNoticia) return console.error("El ID de la noticia no está definido.");
       try {
         await this.$protectedAxios.put(`${BASE_URL}/noticia/desarchivado/${idNoticia}`);
         this.fetchNoticias();
         this.fetchNoticiasArchivadas();
 
         Swal.fire({
-          title: 'Noticia Desarchivada',
-          text: 'La noticia ha sido desarchivada correctamente.',
-          icon: 'success',
-          confirmButtonText: 'Aceptar',
+          title: "Noticia Desarchivada",
+          text: "La noticia ha sido desarchivada correctamente.",
+          icon: "success",
+          confirmButtonText: "Aceptar",
         });
       } catch (error) {
         Swal.fire({
-          title: 'Error',
+          title: "Error",
           text: `Error al desarchivar noticia: ${error.response?.data?.message || error.message}`,
-          icon: 'error',
-          confirmButtonText: 'Aceptar',
+          icon: "error",
+          confirmButtonText: "Aceptar",
         });
       }
     },
 
-    // Mostrar el modal de noticias archivadas
     showArchivedNoticias() {
       this.showArchivedModal = true;
       this.fetchNoticiasArchivadas();
     },
 
-    // Alternar la dirección de orden (ascendente/descendente)
     toggleSortDirection() {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-      this.fetchNoticias(1); // Refresca la tabla con la nueva dirección
+      this.sortDirection = this.sortDirection === "asc" ? "desc" : "asc";
+      this.fetchNoticias(1);
     },
 
-    // Resetear formulario
     resetForm() {
       this.currentNoticia = {
-        titulo: '',
-        descripcion: '',
+        titulo: "",
+        descripcion: "",
         img: null,
-        estado: 'publicado',
-        fechaModificado: new Date().toISOString(), // Asegúrate de incluir la hora
+        estado: "publicado",
+        fechaModificado: new Date().toISOString(),
       };
       this.isEditing = false;
-
-      // Limpiar el campo de archivo (imagen)
       if (this.$refs.fileInput) {
         this.$refs.fileInput.value = null;
       }
     },
 
-    // Editar noticia
-  editNoticia(noticia) {
-    this.currentNoticia = {
-      ...noticia,
-      img: noticia.img ? noticia.img : null,
-      fechaModificado: noticia.fechaModificado || new Date().toISOString(), 
-    };
-    this.isEditing = true;
-    this.editNoticiaId = noticia.idNoticia;
-  },
-
+    editNoticia(noticia) {
+      this.currentNoticia = {
+        ...noticia,
+        img: noticia.img ? noticia.img : null,
+        fechaModificado: noticia.fechaModificado || new Date().toISOString(),
+      };
+      this.isEditing = true;
+      this.editNoticiaId = noticia.idNoticia;
+    },
   },
 };
 </script>

@@ -178,4 +178,14 @@ export const MENU_CARDS = {
     route: "/menu-seguridad",
     accessKey: "Gestión de contraseñas",
   },
+
+  // ===  ANÁLISIS DE RIESGOS ===
+  "Análisis de riesgos": {
+    id: "analisis-riesgos",
+    title: "Análisis de riesgos",
+    description: "Gestiona y analiza riesgos de seguridad de información.",
+    icon: new URL("@/components/images/technical-service.png", import.meta.url).href,
+    route: "/analisis-riesgos",
+    accessKey: "Análisis de riesgos",
+  },
 };

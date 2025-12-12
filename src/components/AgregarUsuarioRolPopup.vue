@@ -247,7 +247,8 @@ export default {
         'ABM Reportes de la encuesta',
         'Certificados de estudiantes',
         'Gestión de usuarios y roles',
-        'Gestión de contraseñas'
+        'Gestión de contraseñas',
+        'Análisis de riesgos'
       ]
     };
   },

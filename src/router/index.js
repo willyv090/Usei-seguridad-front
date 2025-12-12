@@ -1,8 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import PaginaInicio from '../views/PaginaInicio.vue'
-import MenuEstudiante from '../views/MenuEstudiante.vue' 
-import MenuAdministrador from '../views/MenuAdministrador.vue' 
-import MenuDirector from '../views/MenuDirector.vue' 
 import EncuestaEstudiante from '../views/EncuestaEstudiante.vue'
 import ResumePage from '../views/ResumePage.vue' 
 import GestionDirectores from '../views/GestionDirectores.vue'
@@ -32,219 +29,214 @@ import CrearReporteDirector from '@/views/CrearReporteDirector.vue'
 import EstadoEstudiante from '@/views/EstadoEstudiante.vue'
 import MenuSeguridad from '@/views/MenuSeguridad.vue'
 import GestionUsuariosRoles from '@/views/GestionUsuariosRoles.vue'
+import AnalisisRiesgos from '@/views/AnalisisRiesgos.vue'
+import LogUsuario from '@/views/LogUsuario.vue'
 
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 
+
+// Definir las rutas con accessKey en meta para protección por acceso
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
-      path: '/', // Ruta principal
+      path: '/',
       name: 'inicio',
       component: PaginaInicio
     },
-      {
+    {
       path: '/menu-usuario',
       name: 'menuUsuario',
       component: () => import('@/views/MenuUsuario.vue'),
       meta: { requiresAuth: true }
     },
-
-    {
-      path: '/menu-estudiante',
-      name: 'menuEstudiante',
-      component: MenuEstudiante,
-      //meta: { requiresAuth: true, roles: ['estudiante'] } // Rutas protegidas
-    },
-    {
-      path: '/menu-administrador', // Ruta MenuAdministrador
-      name: 'menuAdministrador',
-      component: MenuAdministrador,
-      //meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
-    },
-    {
-      path: '/menu-director', // Ruta MenuDirector
-      name: 'menuDirector',
-      component: MenuDirector,
-      //meta: { requiresAuth: true, roles: ['Director']  } // Rutas protegidas
-    },
     {
       path:'/encuesta-estudiante',
       name: 'encuestaEstudiante',
       component: EncuestaEstudiante,
-      //meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Ver Encuesta de graduación' }
     },
     {
-      path: '/resumen', 
+      path: '/resumen',
       name: 'ResumePage',
       component: ResumePage,
-      //meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Ver Encuesta de graduación' }
     },
     {
-      path: '/gestion-directores', 
+      path: '/gestion-directores',
       name: 'GestionDirectores',
       component: GestionDirectores,
-      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'ABM Directores' }
     },
     {
-      path: '/enviar-encuesta', 
+      path: '/enviar-encuesta',
       name: 'EnviarEncuesta',
       component: EnviarEncuesta,
-      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Ver Encuesta de graduación' }
     },
     {
-      path: '/en-progreso', // Nueva ruta
+      path: '/en-progreso',
       name: 'EnProgreso',
       component: EnProgreso,
-      //meta: { requiresAuth: true } // Rutas protegidas
+      meta: { requiresAuth: true }
     },
     {
-      path: '/editar-encuesta/:idEncuesta/preguntas', // Nueva ruta
+      path: '/editar-encuesta/:idEncuesta/preguntas',
       name: 'EditarEncuesta',
       component: EditarEncuesta,
-      //meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Editar Encuesta' }
     },
     {
-      path: '/listado-estudiantes', // Nueva ruta
+      path: '/listado-estudiantes',
       name: 'ListadoEstudiantes',
       component: ListadoEstudiantes,
-      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Listado Estudiantes' }
     },
     {
       path: '/preguntas/:idPregunta/opciones',
       name: 'GestionOpcionesPregunta',
       component: GestionOpcionesPregunta,
-      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Editar Encuesta' }
     },
     {
       path: '/noticia-form',
       name: 'NoticiaForm',
       component: NoticiaForm,
-      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'ABM Noticias/Anuncios' }
     },
     {
       path: '/gestion-encuestas/:idUsuario',
       name: 'GestionEncuestas',
       component: GestionEncuestas,
-      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Editar Encuesta' }
     },
     {
       path: '/contacto-admin',
       name: 'ContactoAdmin',
       component: ContactoAdmin,
-      //meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Soporte/Ayuda' }
     },
     {
       path: '/formulario-soporte',
       name: 'FormularioSoporte',
       component: FormularioSoporte,
-      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Soporte/Ayuda' }
     },
     {
-      path: '/formulario-plazos', 
+      path: '/formulario-plazos',
       name: 'FormularioPlazos',
-      component: FormularioPlazos, // Usa el nuevo componente
-      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      component: FormularioPlazos,
+      meta: { requiresAuth: true, accessKey: 'Configuración de Plazos' }
     },
     {
       path: '/respuestas-estudiante/:idEstudiante',
       name: 'RespuestasEstudiante',
       component: RespuestasEstudiante,
-      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Ver Encuesta de graduación' }
     },
     {
-      path: '/vista-respuestas/:idEstudiante', 
+      path: '/vista-respuestas/:idEstudiante',
       name: 'VerRespuestas',
-      component: VerRespuestas, // Componente que muestra las respuestas
-      //meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
+      component: VerRespuestas,
+      meta: { requiresAuth: true, accessKey: 'Ver Encuesta de graduación' }
     },
     {
       path: '/subir-certificado',
       name: 'subir-certificado',
       component: subirCertificado,
-      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Editar Certificado' }
     },
     {
       path: '/estudiantes-registrados',
       name: 'EstudiantesRegistrados',
       component: EstudiantesRegistrados,
-      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Listado Estudiantes' }
     },
-    
     {
       path: '/porcentaje-incompleto',
       name: 'PorcentajeIncompleto',
       component: PorcentajeIncompleto,
-      //meta: { requiresAuth: true, roles: ['Administrador']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Datos Estadísticos' }
     },
     {
       path: '/certificado-estudiante',
       name: 'certificado-estudiante',
       component: CertificadoEstudiante,
-      //meta: { requiresAuth: true, roles: ['estudiante']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Editar Certificado' }
     },
     {
       path: '/dashboard',
       name: 'dashboard',
       component: Dashboard,
-      //meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Dashboard' }
     },
     {
-      path: '/reporte-dash', // Nueva ruta para ReporteDash
+      path: '/reporte-dash',
       name: 'ReporteDash',
       component: ReporteDash,
-      //meta: { requiresAuth: true, roles: ['Administrador'] } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Datos Estadísticos' }
     },
     {
       path: '/acceso-denegado',
       name: 'AccesoDenegado',
-      //component: AccesoDenegado // Componente que muestra un mensaje de acceso denegado
-    },  
+      component: AccesoDenegado
+    },
     {
       path: '/soporte-director',
       name: 'SoporteDirector',
       component: SoporteDirector,
-      //meta: { requiresAuth: true, roles: ['Director'] }
+      meta: { requiresAuth: true, accessKey: 'Soporte/Ayuda' }
     },
     {
       path: '/lista-preguntas',
       name: 'ListaPreguntas',
       component: VerPreguntas,
-      //meta: { requiresAuth: true, roles: ['Administrador', 'Director']  } // Rutas protegidas
-    }, 
-
+      meta: { requiresAuth: true, accessKey: 'Editar Encuesta' }
+    },
     {
       path: '/historial-reportes',
       name: 'HistorialReportes',
       component: HistorialReportes,
-      //meta: { requiresAuth: true, roles: ['Administrador', 'Director']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Datos Estadísticos' }
     },
     {
       path: '/crear-reporte-director',
       name: 'CrearReporteDirector',
       component: CrearReporteDirector,
-      //meta: { requiresAuth: true, roles: ['Administrador', 'Director']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Datos Estadísticos' }
     },
     {
       path: '/estado-estudiante',
       name: 'EstadoEstudiante',
       component: EstadoEstudiante,
-      //meta: { requiresAuth: true, roles: ['Administrador', 'Director']  } // Rutas protegidas
+      meta: { requiresAuth: true, accessKey: 'Seguimiento de estudiantes' }
     },
     {
       path: '/menu-seguridad',
       name: 'MenuSeguridad',
-      component: MenuSeguridad
+      component: MenuSeguridad,
+      meta: { requiresAuth: true, accessKey: 'Gestión de contraseñas' }
     },
-
     {
       path: '/gestion-usuarios-roles',
       name: 'GestionUsuariosRoles',
-      component: GestionUsuariosRoles
+      component: GestionUsuariosRoles,
+      //meta: { requiresAuth: true, accessKey: 'Gestión de usuarios y roles' }
     },
-
+    {
+      path: '/log-usuario',
+      name: 'LogUsuario',
+      component: LogUsuario,
+      //meta: { requiresAuth: true, accessKey: 'Log Usuario' }
+    },
+    {
+      path: '/analisis-riesgos',
+      name: 'AnalisisRiesgos',
+      component: AnalisisRiesgos,
+      meta: { requiresAuth: true, accessKey: 'Análisis de riesgos' }
+    },
   ],
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
@@ -253,24 +245,35 @@ const router = createRouter({
       return { top: 0 };
     }
   },
-})
+});
 
-// Verifica la autenticación antes de cada navegación
+
+// Protección de rutas basada en accesos
 router.beforeEach((to, from, next) => {
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth);
   const token = localStorage.getItem('authToken');
-  const userRole = localStorage.getItem('rol'); // Obtén el rol del usuario desde el almacenamiento
+  // Accesos del usuario guardados en localStorage como array de strings
+  let userAccesses = [];
+  try {
+    userAccesses = JSON.parse(localStorage.getItem('accesos') || '[]');
+  } catch (e) {
+    userAccesses = [];
+  }
 
   // Si la ruta requiere autenticación y no hay token, redirige al inicio
   if (requiresAuth && !token) {
     return next({ path: '/' });
   }
 
-  // Verificar si la ruta tiene roles definidos en `meta` y si el rol del usuario tiene acceso
-  const allowedRoles = to.meta.roles;
-  if (requiresAuth && allowedRoles && !allowedRoles.includes(userRole)) {
-    // Redirigir a una página de acceso denegado si el usuario no tiene permiso
-    return next({ name: 'AccesoDenegado' }); // Asume que tienes una ruta `AccesoDenegado`
+  // Si la ruta requiere acceso específico, verifica si el usuario lo tiene
+  const requiredAccess = to.meta.accessKey;
+  if (requiresAuth && requiredAccess) {
+    // Normaliza espacios y mayúsculas/minúsculas
+    const normalizedAccesses = userAccesses.map(a => a.trim().toLowerCase());
+    const normalizedRequired = requiredAccess.trim().toLowerCase();
+    if (!normalizedAccesses.includes(normalizedRequired)) {
+      return next({ name: 'AccesoDenegado' });
+    }
   }
 
   // Si todo está bien, permitir el acceso a la ruta

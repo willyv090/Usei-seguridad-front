@@ -16,15 +16,11 @@
     methods: {
       volverInicio() {
         // Obtener el rol del usuario almacenado en localStorage
-        const userRole = localStorage.getItem('rol');
+        const auth = localStorage.getItem('authToken');
         
         // Redirigir a la página correspondiente según el rol del usuario
-        if (userRole === 'estudiante') {
-          this.$router.push('/menu-estudiante');
-        } else if (userRole === 'Administrador') {
-          this.$router.push('/menu-administrador');
-        } else if (userRole === 'Director') {
-          this.$router.push('/menu-director');
+        if (auth) {
+          this.$router.push('/menu-usuario');
         } else {
           // Si no hay un rol válido, redirige a la página principal de inicio de sesión o inicio
           this.$router.push('/');
