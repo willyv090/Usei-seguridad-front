@@ -29,6 +29,7 @@ import CrearReporteDirector from '@/views/CrearReporteDirector.vue'
 import EstadoEstudiante from '@/views/EstadoEstudiante.vue'
 import MenuSeguridad from '@/views/MenuSeguridad.vue'
 import GestionUsuariosRoles from '@/views/GestionUsuariosRoles.vue'
+import AnalisisRiesgos from '@/views/AnalisisRiesgos.vue'
 
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -222,6 +223,12 @@ const router = createRouter({
       name: 'GestionUsuariosRoles',
       component: GestionUsuariosRoles,
       meta: { requiresAuth: true, accessKey: 'Gestión de usuarios y roles' }
+    },
+    {
+      path: '/analisis-riesgos',
+      name: 'AnalisisRiesgos',
+      component: AnalisisRiesgos,
+      meta: { requiresAuth: true, accessKey: 'Análisis de riesgos' }
     },
   ],
   scrollBehavior(to, from, savedPosition) {
