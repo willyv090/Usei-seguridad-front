@@ -150,28 +150,36 @@
               <td v-if="visibleColumns.id_log">
                 {{ log.id_log }}
               </td>
+
               <td v-if="visibleColumns.fecha_log">
                 {{ formatFecha(log.fecha_log) }}
               </td>
+
               <td v-if="visibleColumns.tipo_log">
                 {{ log.tipo_log }}
               </td>
+
               <td v-if="visibleColumns.Usuario_id_usuario">
                 {{ log.Usuario_id_usuario }}
               </td>
+
               <td v-if="visibleColumns.modulo">
                 {{ log.modulo }}
               </td>
+
               <td v-if="visibleColumns.motivo">
                 {{ log.motivo }}
               </td>
+
               <td v-if="visibleColumns.nivel">
                 {{ log.nivel }}
               </td>
-              <td v-if="visibleColumns.mensaje">
+
+              <td v-if="visibleColumns.mensaje" class="cell-wrap" :title="log.mensaje">
                 {{ log.mensaje }}
               </td>
-              <td v-if="visibleColumns.detalle">
+
+              <td v-if="visibleColumns.detalle" class="cell-wrap" :title="log.detalle">
                 {{ log.detalle }}
               </td>
             </tr>
@@ -284,10 +292,10 @@ export default {
         const valA = a[this.sortBy];
         const valB = b[this.sortBy];
 
-        // fecha_log -> comparo como fecha
+        // fecha_log -> comparo como fecha (soporta array y string)
         if (this.sortBy === 'fecha_log') {
-          const dA = valA ? new Date(valA).getTime() : 0;
-          const dB = valB ? new Date(valB).getTime() : 0;
+          const dA = this.toDate(valA)?.getTime?.() ?? 0;
+          const dB = this.toDate(valB)?.getTime?.() ?? 0;
           return this.sortDirection === 'asc' ? dA - dB : dB - dA;
         }
 
@@ -318,7 +326,7 @@ export default {
 
         this.logs = data.map(l => ({
           id_log: l.id_log ?? l.idLog,
-          fecha_log: l.fecha_log ?? l.fechaLog,
+          fecha_log: l.fecha_log ?? l.fechaLog, // puede venir array o string
           tipo_log: l.tipo_log ?? l.tipoLog,
           Usuario_id_usuario:
             l.Usuario_id_usuario ??
@@ -332,10 +340,20 @@ export default {
           detalle: l.detalle
         }));
       } catch (e) {
-        console.error('Error cargando logs:', e);
-        Swal.fire('Error', 'No se pudieron cargar los logs de usuario', 'error');
+        const status = e?.response?.status;
+        const data = e?.response?.data;
+        console.error('Error cargando logs:', { status, data, e });
+
+        Swal.fire(
+          'Error',
+          `No se pudieron cargar los logs. Status: ${status ?? 'N/A'}\n${
+            typeof data === 'string' ? data : JSON.stringify(data)
+          }`,
+          'error'
+        );
       }
     },
+
     handlePageClick(page) {
       this.currentPage = page;
     },
@@ -377,11 +395,27 @@ export default {
       this.sortBy = 'fecha_log';
       this.sortDirection = 'desc';
     },
+
+    // Convierte array/string a Date (para ordenar bien)
+    toDate(value) {
+      if (!value) return null;
+
+      if (Array.isArray(value)) {
+        const [y, m, d, hh = 0, mm = 0, ss = 0] = value;
+        return new Date(y, (m ?? 1) - 1, d ?? 1, hh ?? 0, mm ?? 0, ss ?? 0);
+      }
+
+      const dt = new Date(value);
+      if (!Number.isNaN(dt.getTime())) return dt;
+
+      return null;
+    },
+
+    // Formatea fecha mostrando bonito aunque venga como array
     formatFecha(value) {
-      if (!value) return '';
-      const d = new Date(value);
-      if (Number.isNaN(d.getTime())) return value;
-      return d.toLocaleString();
+      const dt = this.toDate(value);
+      if (!dt) return value ? String(value) : '';
+      return dt.toLocaleString();
     }
   },
   mounted() {
@@ -561,15 +595,24 @@ export default {
   padding: 10px;
   text-align: left;
   background: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  vertical-align: top;
+
+  white-space: normal;      
+  overflow: visible;         
+  text-overflow: clip;       
+  word-break: break-word;    
 }
 
 .log-table-container th {
   background-color: #263d42;
   color: white;
   cursor: pointer;
+}
+
+.cell-wrap {
+  max-width: 320px;
+  white-space: normal;
+  word-break: break-word;
 }
 
 .no-data {
