@@ -160,11 +160,9 @@ export default {
         detalle: true
       },
       predefinedModulos: [
-        'ROL',
-        'USUARIO',
+        'Módulo Gestión de Roles',
+        'Módulo Gestión de Usuarios',
         'AUTH',
-        'Modulo Roles y Usuarios',
-        'Modulo Contraseñas',
         'Modulo Noticias'
       ]
     };
