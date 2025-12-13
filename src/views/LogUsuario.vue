@@ -160,6 +160,9 @@ export default {
         detalle: true
       },
       predefinedModulos: [
+        'ROL',
+        'USUARIO',
+        'AUTH',
         'Modulo Roles y Usuarios',
         'Modulo Contraseñas',
         'Modulo Noticias'
