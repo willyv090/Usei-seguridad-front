@@ -28,25 +28,18 @@
 
       <!-- FILTROS -->
       <div class="filters">
-        <!-- BÚSQUEDA -->
         <input
           v-model="searchTerm"
           placeholder="Buscar por mensaje, motivo, módulo, tipo o usuario"
         />
 
-        <!-- DROPDOWN MÓDULO -->
         <select v-model="moduloFilter">
           <option value="">Todos los módulos</option>
-          <option
-            v-for="mod in moduloOptions"
-            :key="mod"
-            :value="mod"
-          >
+          <option v-for="mod in moduloOptions" :key="mod" :value="mod">
             {{ mod }}
           </option>
         </select>
 
-        <!-- REGISTROS POR PÁGINA -->
         <select v-model.number="perPage">
           <option :value="5">5</option>
           <option :value="10">10</option>
@@ -54,14 +47,12 @@
           <option :value="50">50</option>
         </select>
 
-        <!-- ORDEN -->
         <button class="sort-button" @click="toggleSortDirection">
           <i :class="sortDirection === 'asc'
               ? 'fa-solid fa-chevron-up'
               : 'fa-solid fa-chevron-down'"></i>
         </button>
 
-        <!-- MOSTRAR / OCULTAR COLUMNAS -->
         <div class="columns-menu">
           <button @click="toggleColumnsMenu">
             Columnas
@@ -80,105 +71,35 @@
         </div>
       </div>
 
-      <!-- TABLA LOG_USUARIO -->
+      <!-- TABLA -->
       <div class="log-table-container">
         <table>
           <thead>
             <tr>
-              <th
-                v-if="visibleColumns.id_log"
-                @click="sort('id_log')"
-              >
-                id_log
-              </th>
-              <th
-                v-if="visibleColumns.fecha_log"
-                @click="sort('fecha_log')"
-              >
-                fecha_log
-              </th>
-              <th
-                v-if="visibleColumns.tipo_log"
-                @click="sort('tipo_log')"
-              >
-                tipo_log
-              </th>
-              <th
-                v-if="visibleColumns.Usuario_id_usuario"
-                @click="sort('Usuario_id_usuario')"
-              >
-                Usuario_id_usuario
-              </th>
-              <th
-                v-if="visibleColumns.modulo"
-                @click="sort('modulo')"
-              >
-                modulo
-              </th>
-              <th
-                v-if="visibleColumns.motivo"
-                @click="sort('motivo')"
-              >
-                motivo
-              </th>
-              <th
-                v-if="visibleColumns.nivel"
-                @click="sort('nivel')"
-              >
-                nivel
-              </th>
-              <th
-                v-if="visibleColumns.mensaje"
-                @click="sort('mensaje')"
-              >
-                mensaje
-              </th>
-              <th
-                v-if="visibleColumns.detalle"
-                @click="sort('detalle')"
-              >
-                detalle
-              </th>
+              <th v-if="visibleColumns.id_log" @click="sort('id_log')">id_log</th>
+              <th v-if="visibleColumns.fecha_log" @click="sort('fecha_log')">fecha_log</th>
+              <th v-if="visibleColumns.tipo_log" @click="sort('tipo_log')">tipo_log</th>
+              <th v-if="visibleColumns.Usuario_id_usuario" @click="sort('Usuario_id_usuario')">Usuario_id_usuario</th>
+              <th v-if="visibleColumns.modulo" @click="sort('modulo')">modulo</th>
+              <th v-if="visibleColumns.motivo" @click="sort('motivo')">motivo</th>
+              <th v-if="visibleColumns.nivel" @click="sort('nivel')">nivel</th>
+              <th v-if="visibleColumns.mensaje" @click="sort('mensaje')">mensaje</th>
+              <th v-if="visibleColumns.detalle" @click="sort('detalle')">detalle</th>
             </tr>
           </thead>
 
           <tbody>
-            <tr
-              v-for="log in paginatedLogs"
-              :key="log.id_log"
-            >
-              <td v-if="visibleColumns.id_log">
-                {{ log.id_log }}
-              </td>
-
-              <td v-if="visibleColumns.fecha_log">
-                {{ formatFecha(log.fecha_log) }}
-              </td>
-
-              <td v-if="visibleColumns.tipo_log">
-                {{ log.tipo_log }}
-              </td>
-
-              <td v-if="visibleColumns.Usuario_id_usuario">
-                {{ log.Usuario_id_usuario }}
-              </td>
-
-              <td v-if="visibleColumns.modulo">
-                {{ log.modulo }}
-              </td>
-
-              <td v-if="visibleColumns.motivo">
-                {{ log.motivo }}
-              </td>
-
-              <td v-if="visibleColumns.nivel">
-                {{ log.nivel }}
-              </td>
-
+            <tr v-for="log in paginatedLogs" :key="log.id_log">
+              <td v-if="visibleColumns.id_log">{{ log.id_log }}</td>
+              <td v-if="visibleColumns.fecha_log">{{ formatFecha(log.fecha_log) }}</td>
+              <td v-if="visibleColumns.tipo_log">{{ log.tipo_log }}</td>
+              <td v-if="visibleColumns.Usuario_id_usuario">{{ log.Usuario_id_usuario }}</td>
+              <td v-if="visibleColumns.modulo">{{ log.modulo }}</td>
+              <td v-if="visibleColumns.motivo">{{ log.motivo }}</td>
+              <td v-if="visibleColumns.nivel">{{ log.nivel }}</td>
               <td v-if="visibleColumns.mensaje" class="cell-wrap" :title="log.mensaje">
                 {{ log.mensaje }}
               </td>
-
               <td v-if="visibleColumns.detalle" class="cell-wrap" :title="log.detalle">
                 {{ log.detalle }}
               </td>
@@ -213,11 +134,8 @@ import { BASE_URL } from '@/config/globals';
 
 export default {
   name: 'LogUsuario',
-  components: {
-    NavBar,
-    FooterComponent,
-    PaginationComponent
-  },
+  components: { NavBar, FooterComponent, PaginationComponent },
+
   data() {
     return {
       userRole: '',
@@ -241,7 +159,6 @@ export default {
         mensaje: true,
         detalle: true
       },
-      // Módulos que quieres manejar
       predefinedModulos: [
         'Modulo Roles y Usuarios',
         'Modulo Contraseñas',
@@ -249,8 +166,8 @@ export default {
       ]
     };
   },
+
   computed: {
-    // opciones únicas de módulo para el dropdown
     moduloOptions() {
       const set = new Set(this.predefinedModulos);
       this.logs.forEach(l => {
@@ -258,41 +175,36 @@ export default {
       });
       return Array.from(set);
     },
-    // cantidad de columnas visibles (para el colspan del "no data")
+
     visibleColumnsCount() {
       return Object.values(this.visibleColumns).filter(Boolean).length || 1;
     },
-    // filtrado + orden + paginación local
+
     filteredLogs() {
       const term = this.searchTerm.toLowerCase().trim();
-
       let res = this.logs;
 
       if (term) {
-        res = res.filter(l => {
-          return (
-            String(l.id_log ?? '').toLowerCase().includes(term) ||
-            String(l.Usuario_id_usuario ?? '').toLowerCase().includes(term) ||
-            (l.tipo_log ?? '').toLowerCase().includes(term) ||
-            (l.modulo ?? '').toLowerCase().includes(term) ||
-            (l.motivo ?? '').toLowerCase().includes(term) ||
-            (l.nivel ?? '').toLowerCase().includes(term) ||
-            (l.mensaje ?? '').toLowerCase().includes(term) ||
-            (l.detalle ?? '').toLowerCase().includes(term)
-          );
-        });
+        res = res.filter(l => (
+          String(l.id_log ?? '').toLowerCase().includes(term) ||
+          String(l.Usuario_id_usuario ?? '').toLowerCase().includes(term) ||
+          (l.tipo_log ?? '').toLowerCase().includes(term) ||
+          (l.modulo ?? '').toLowerCase().includes(term) ||
+          (l.motivo ?? '').toLowerCase().includes(term) ||
+          (l.nivel ?? '').toLowerCase().includes(term) ||
+          (l.mensaje ?? '').toLowerCase().includes(term) ||
+          (l.detalle ?? '').toLowerCase().includes(term)
+        ));
       }
 
       if (this.moduloFilter) {
         res = res.filter(l => l.modulo === this.moduloFilter);
       }
 
-      // ordenamiento
       res = [...res].sort((a, b) => {
         const valA = a[this.sortBy];
         const valB = b[this.sortBy];
 
-        // fecha_log -> comparo como fecha (soporta array y string)
         if (this.sortBy === 'fecha_log') {
           const dA = this.toDate(valA)?.getTime?.() ?? 0;
           const dB = this.toDate(valB)?.getTime?.() ?? 0;
@@ -301,32 +213,30 @@ export default {
 
         const sA = (valA ?? '').toString().toLowerCase();
         const sB = (valB ?? '').toString().toLowerCase();
-
         if (sA < sB) return this.sortDirection === 'asc' ? -1 : 1;
         if (sA > sB) return this.sortDirection === 'asc' ? 1 : -1;
         return 0;
       });
 
-      // recalculo páginas
       this.totalPages = Math.ceil(res.length / this.perPage) || 1;
-
       return res;
     },
+
     paginatedLogs() {
       const start = (this.currentPage - 1) * this.perPage;
       return this.filteredLogs.slice(start, start + this.perPage);
     }
   },
+
   methods: {
     async fetchLogs() {
       try {
-        // 🔹 Ajusta esta URL al endpoint real de tus logs
         const resp = await this.$protectedAxios.get(`${BASE_URL}/log-usuario`);
         const data = Array.isArray(resp.data) ? resp.data : (resp.data.content || []);
 
         this.logs = data.map(l => ({
           id_log: l.id_log ?? l.idLog,
-          fecha_log: l.fecha_log ?? l.fechaLog, // puede venir array o string
+          fecha_log: l.fecha_log ?? l.fechaLog,
           tipo_log: l.tipo_log ?? l.tipoLog,
           Usuario_id_usuario:
             l.Usuario_id_usuario ??
@@ -354,9 +264,38 @@ export default {
       }
     },
 
+    // ✅ 1 vez por login (no por refresh / no por volver del menú)
+    async registrarAccesoVistaLogsUnaVez() {
+      const userId =
+        localStorage.getItem('id_usuario') ||
+        localStorage.getItem('idUsuario') ||
+        '';
+
+      const loginSessionId = localStorage.getItem('loginSessionId') || '';
+
+      const key = `USEI_LOGS_VIEW_LOGGED_${userId || 'anon'}_${loginSessionId || 'nosession'}`;
+
+      if (sessionStorage.getItem(key) === 'true') return;
+
+      try {
+        await this.$protectedAxios.post(`${BASE_URL}/log-usuario/auditoria/acceso`, {
+          detalle: 'El usuario abrió la pantalla de Revisión de Logs'
+        });
+
+        sessionStorage.setItem(key, 'true');
+      } catch (e) {
+        console.warn(
+          'No se pudo registrar auditoría de acceso a logs:',
+          e?.response?.status,
+          e?.response?.data || e?.message
+        );
+      }
+    },
+
     handlePageClick(page) {
       this.currentPage = page;
     },
+
     sort(field) {
       if (this.sortBy === field) {
         this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -365,15 +304,19 @@ export default {
         this.sortDirection = 'asc';
       }
     },
+
     toggleSortDirection() {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     },
+
     toggleColumnsMenu() {
       this.showColumnsMenu = !this.showColumnsMenu;
     },
+
     toggleColumn(key) {
       this.visibleColumns[key] = !this.visibleColumns[key];
     },
+
     getColumnLabel(key) {
       const labels = {
         id_log: 'ID Log',
@@ -388,6 +331,7 @@ export default {
       };
       return labels[key] || key;
     },
+
     resetFilters() {
       this.searchTerm = '';
       this.moduloFilter = '';
@@ -396,7 +340,6 @@ export default {
       this.sortDirection = 'desc';
     },
 
-    // Convierte array/string a Date (para ordenar bien)
     toDate(value) {
       if (!value) return null;
 
@@ -407,36 +350,21 @@ export default {
 
       const dt = new Date(value);
       if (!Number.isNaN(dt.getTime())) return dt;
-
       return null;
     },
 
-    // Formatea fecha mostrando bonito aunque venga como array
     formatFecha(value) {
       const dt = this.toDate(value);
       if (!dt) return value ? String(value) : '';
       return dt.toLocaleString();
-    },
-    async registrarAccesoVistaLogsUnaVez() {
-      const key = 'USEI_LOGS_VIEW_LOGGED';
-
-      // 1 vez por pestaña/sesión
-      if (sessionStorage.getItem(key) === 'true') return;
-
-      try {
-        await this.$protectedAxios.post(`${BASE_URL}/log-usuario/auditoria/acceso`);
-        sessionStorage.setItem(key, 'true');
-      } catch (e) {
-        // No bloquea la carga de datos si falla el audit
-        console.warn('No se pudo registrar acceso a logs:', e?.response?.status, e?.response?.data);
-      }
-    },
+    }
   },
-  mounted() {
-  this.userRole = localStorage.getItem('rol') || '';
-  this.registrarAccesoVistaLogsUnaVez();
-  this.fetchLogs();
-}
+
+  async mounted() {
+    this.userRole = localStorage.getItem('rol') || '';
+    await this.registrarAccesoVistaLogsUnaVez();
+    this.fetchLogs();
+  }
 };
 </script>
 
@@ -612,10 +540,10 @@ export default {
   background: #fff;
   vertical-align: top;
 
-  white-space: normal;      
-  overflow: visible;         
-  text-overflow: clip;       
-  word-break: break-word;    
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
 }
 
 .log-table-container th {

@@ -189,7 +189,7 @@ export const MENU_CARDS = {
     accessKey: "Análisis de riesgos",
   },
 
-  // ===  ANÁLISIS DE RIESGOS ===
+  // ===  REVISIÓN DE LOGS ===
   "Revisión de Logs": {
     id: "revision-logs",
     title: "Revisión de Logs",

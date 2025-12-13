@@ -1,25 +1,21 @@
 import axios from 'axios';
 
-// Instancia pública de Axios (sin verificación de token)
+// Instancia pública (sin token)
 const publicAxios = axios.create();
 
-// Instancia protegida de Axios (con verificación de token)
+// Instancia protegida (con token si existe)
 const protectedAxios = axios.create();
 
-// Agrega un interceptor de solicitud a `protectedAxios` para verificar el token
 protectedAxios.interceptors.request.use(
-  config => {
-    const token = localStorage.getItem('authToken');
+  (config) => {
+    const token = localStorage.getItem('authToken'); // ✅ tu key real
     if (token) {
+      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      return Promise.reject(new Error('No autorizado. Se requiere token.'));
     }
     return config;
   },
-  error => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export { publicAxios, protectedAxios };
